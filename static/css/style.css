@@ -110,6 +110,7 @@ textarea:focus-visible {
     display: flex;
     flex-direction: row;
     min-height: 100vh;
+    min-height: 100dvh; /* Altura de viewport dinâmica para evitar cortes no iOS Safari */
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
@@ -531,7 +532,7 @@ textarea:focus-visible {
     height: 100vh;
     background-color: rgba(15, 23, 42, 0.6);
     backdrop-filter: blur(8px);
-    z-index: 1000;
+    z-index: 2500 !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -703,13 +704,42 @@ textarea:focus-visible {
     
     .main-content {
         margin-left: 0 !important; /* Ocupa a tela inteira */
-        padding: 1rem 0.75rem calc(var(--bottom-bar-height) + 1.25rem) 0.75rem !important; /* Espaçamento ajustado */
+        padding: 1rem 0.5rem calc(var(--bottom-bar-height) + 1.25rem) 0.5rem !important; /* Espaçamento mais fluído */
         width: 100% !important;
         max-width: 100% !important;
         overflow-x: hidden !important;
+        min-height: 100vh;
+        min-height: 100dvh;
     }
     
-    /* Barra inferior estilo app nativo */
+    /* Barra de status de usuário logado equilibrada no celular */
+    .user-status-bar {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+        gap: 8px !important;
+        margin-bottom: 1.25rem !important;
+    }
+    
+    /* Padronização do Page Header no Celular para evitar cortes ou quebras de texto */
+    .page-header {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        width: 100% !important;
+    }
+    
+    .page-header > div,
+    .page-header > div:last-child {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    
+    /* Barra inferior estilo app nativo com segurança para iPhones modernos (safe areas) */
     .bottom-bar {
         display: flex;
         justify-content: space-around;
@@ -717,8 +747,9 @@ textarea:focus-visible {
         position: fixed;
         bottom: 0;
         left: 0;
-        width: 100% !important; /* Alterado de 100vw para 100% para evitar barra de rolagem horizontal */
-        height: var(--bottom-bar-height);
+        width: 100% !important; /* Evita barra de rolagem horizontal */
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        height: calc(var(--bottom-bar-height) + env(safe-area-inset-bottom, 0px));
         background-color: var(--bg-card);
         border-top: 2px solid var(--border);
         box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
@@ -735,8 +766,11 @@ textarea:focus-visible {
         flex-grow: 1;
         height: 100%;
         gap: 2px;
-        font-size: 11px !important; /* Fonte menor para caber em telas estreitas */
+        font-size: clamp(9px, 2.5vw, 11px) !important; /* Fonte dinâmica que evita sobreposições */
         font-weight: 700;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
     
     .bottom-bar-item.active {
@@ -755,24 +789,27 @@ textarea:focus-visible {
     
     .dashboard-row {
         grid-template-columns: 1fr !important; /* Coluna única no celular */
-        gap: 1.25rem;
+        gap: 1rem !important;
     }
     
     .page-title {
-        font-size: 24px !important;
+        font-size: 22px !important; /* Ligeiramente menor para telas pequenas */
+        line-height: 1.2 !important;
     }
     
+    /* Fonte fluida para o caixa/lucro para que valores grandes (Ex: R$ 15.000,00) caibam no iPhone SE/11/14 */
     .card-value {
-        font-size: 26px !important;
+        font-size: clamp(20px, 6.5vw, 26px) !important;
+        flex-wrap: wrap !important;
     }
     
     .card-grid {
         grid-template-columns: 1fr !important; /* Força os cards de métricas em uma única coluna */
-        gap: 1rem !important;
+        gap: 0.75rem !important;
     }
     
     .info-card {
-        padding: 1.25rem !important; /* Reduz espaçamento do card para economizar tela */
+        padding: 1.25rem 1rem !important; /* Espaçamento enxuto do card */
     }
 
     .form-row {
@@ -781,8 +818,56 @@ textarea:focus-visible {
     }
     
     .btn {
-        width: 100% !important; /* Botões ocupam largura total no celular para fácil clique */
-        font-size: 17px !important;
+        font-size: 16px !important;
+    }
+    
+    /* Apenas botões grandes normais ocupam largura total para cliques fáceis, 
+       impedindo que botões de ação na tabela (btn-sm) fiquem gigantes e distorcidos */
+    .btn:not(.btn-sm) {
+        width: 100% !important;
+    }
+    
+    /* Otimização de tabelas no celular para melhor legibilidade sem rolagem extrema */
+    .table-responsive {
+        border-radius: var(--radius-md) !important;
+        -webkit-overflow-scrolling: touch !important; /* Rolagem inercial nativa no iOS/Android */
+    }
+    
+    .custom-table th, .custom-table td {
+        padding: 10px 8px !important; /* Padded reduzido para caber mais informações */
+        font-size: 13px !important;
+    }
+    
+    .custom-table {
+        min-width: 580px !important; /* Garante estrutura limpa e legível */
+    }
+
+    /* Modais Ultra-Adaptáveis a Qualquer Altura de iPhone (Safe Areas) */
+    .modal-container {
+        margin: auto !important;
+        max-height: calc(100vh - 20px) !important;
+        max-height: calc(100dvh - 20px) !important;
+        width: 100% !important;
+        border-radius: var(--radius-md) !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .modal-body {
+        padding: 1rem !important;
+        overflow-y: auto !important;
+    }
+    
+    /* Rodapé do modal grudado de forma fixa na base para que os botões (Salvar/Cancelar)
+       estejam sempre visíveis ao usuário no celular e não sumam da tela */
+    .modal-footer {
+        padding: 1rem !important;
+        position: sticky !important;
+        bottom: 0 !important;
+        background-color: var(--bg-card) !important;
+        border-top: 1px solid var(--border) !important;
+        z-index: 100 !important;
+        margin-top: auto !important;
     }
 }
 
@@ -800,5 +885,162 @@ textarea:focus-visible {
 @media (min-width: 993px) {
     .main-content {
         padding: 2.5rem 3.5rem;
+    }
+}
+
+/* ==========================================================================
+   SISTEMA DE IMPRESSÃO GLOBAL PROFISSIONAL (PDF / PAPEL)
+   ========================================================================== */
+@media print {
+    /* Configurações da página física */
+    @page {
+        size: auto;
+        margin: 12mm 15mm;
+    }
+
+    /* Reset geral de layout */
+    html, body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        font-size: 13px !important;
+        font-family: 'Outfit', 'Helvetica Neue', Arial, sans-serif !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    /* Impede que o contêiner flexbox trave a paginação do navegador */
+    .app-container {
+        display: block !important;
+        width: 100% !important;
+        min-height: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+        min-height: auto !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Ocultação global de elementos não-imprimíveis */
+    .sidebar, 
+    .bottom-bar, 
+    .btn, 
+    button, 
+    .user-status-bar, 
+    .alert-container, 
+    .modal-backdrop, 
+    .table-actions, 
+    .actions-col, 
+    .chart-card,
+    .page-header .btn {
+        display: none !important;
+    }
+
+    /* Exibe as seções exclusivas de impressão */
+    .print-header, 
+    .print-costs-table, 
+    .print-footer {
+        display: block !important;
+    }
+
+    /* Layout de colunas e grids convertidos para fluxo linear seguro */
+    .dashboard-row, 
+    .card-grid {
+        display: block !important;
+        width: 100% !important;
+        margin-bottom: 1.5rem !important;
+    }
+
+    /* Cartões impressos limpos e legíveis */
+    .dashboard-card, 
+    .info-card {
+        border: 1px solid #000000 !important;
+        border-radius: 12px !important;
+        box-shadow: none !important;
+        padding: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        page-break-inside: avoid !important;
+        position: relative !important;
+    }
+
+    /* Remove barras de destaque lateral dos cards em preto e branco */
+    .info-card::before {
+        display: none !important;
+    }
+
+    /* Tabelas otimizadas para folha de papel */
+    .table-responsive {
+        border: 1px solid #000000 !important;
+        box-shadow: none !important;
+        border-radius: 12px !important;
+        page-break-inside: avoid !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }
+
+    .custom-table {
+        min-width: 100% !important;
+        width: 100% !important;
+    }
+
+    .custom-table th {
+        background-color: #f1f5f9 !important;
+        color: #000000 !important;
+        border-bottom: 2px solid #000000 !important;
+        padding: 10px !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+    }
+
+    .custom-table td {
+        padding: 10px !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        color: #000000 !important;
+    }
+
+    .custom-table tr {
+        page-break-inside: avoid !important;
+    }
+
+    /* Mantém as cores de status originais na impressão (Ex: Verde para pago, Vermelho para custos) */
+    .truck-plate-badge, 
+    .badge, 
+    .lucro-preview-box, 
+    .badge-success, 
+    .badge-danger, 
+    .badge-warning, 
+    .badge-primary {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
+    .truck-plate-badge {
+        border: 1.5px solid #000000 !important;
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        padding: 3px 8px !important;
+        font-weight: 800 !important;
+        border-radius: 6px !important;
+        font-family: monospace !important;
+    }
+
+    .badge {
+        border: 1px solid #000000 !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        font-weight: 800 !important;
     }
 }

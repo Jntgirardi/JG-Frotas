@@ -56,9 +56,14 @@
             <div style="font-size: 13px; color: var(--text-muted);">
                 Viagens feitas: <strong>{{ caminhao.viagens | length }}</strong>
             </div>
-            
             <div style="display: flex; gap: 8px;">
-                <button class="btn btn-secondary btn-sm" onclick="editarCaminhaoModal({{ caminhao.id }}, '{{ caminhao.placa }}', '{{ caminhao.modelo }}', {{ caminhao.ano }}, '{{ caminhao.cor }}', '{{ caminhao.status }}')">
+                <button class="btn btn-secondary btn-sm edit-caminhao-btn" 
+                        data-id="{{ caminhao.id }}"
+                        data-placa="{{ caminhao.placa }}"
+                        data-modelo="{{ caminhao.modelo }}"
+                        data-ano="{{ caminhao.ano }}"
+                        data-cor="{{ caminhao.cor or '' }}"
+                        data-status="{{ caminhao.status }}">
                     ✏️ Editar
                 </button>
                 <a href="{{ url_for('deletar_caminhao', id=caminhao.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja excluir o caminhão {{ caminhao.placa }}? Todas as viagens e manutenções associadas a ele também serão apagadas!')" style="padding: 8px 12px;">
@@ -195,18 +200,29 @@
     // Autofill do ano atual no formulário de cadastro
     document.getElementById('ano').value = new Date().getFullYear();
 
-    // Lógica para abrir o modal de edição já preenchido
-    function editarCaminhaoModal(id, placa, modelo, ano, cor, status) {
-        const form = document.getElementById('form-editar-caminhao');
-        form.action = `/caminhoes/editar/${id}`;
-        
-        abrirModalEdicao('modal-editar-caminhao', {
-            placa: placa,
-            modelo: modelo,
-            ano: ano,
-            cor: cor,
-            status: status
+    // Lógica para abrir o modal de edição já preenchido via escuta de atributos data-*
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.edit-caminhao-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const placa = btn.getAttribute('data-placa');
+                const modelo = btn.getAttribute('data-modelo');
+                const ano = btn.getAttribute('data-ano');
+                const cor = btn.getAttribute('data-cor');
+                const status = btn.getAttribute('data-status');
+
+                const form = document.getElementById('form-editar-caminhao');
+                form.action = `/caminhoes/editar/${id}`;
+                
+                abrirModalEdicao('modal-editar-caminhao', {
+                    placa: placa,
+                    modelo: modelo,
+                    ano: ano,
+                    cor: cor,
+                    status: status
+                });
+            });
         });
-    }
+    });
 </script>
 {% endblock %}

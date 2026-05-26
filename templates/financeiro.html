@@ -115,7 +115,7 @@
     </div>
 
     <!-- DISTRIBUIÇÃO GRÁFICA DE DESPESAS (Pie Chart) -->
-    <div class="dashboard-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+    <div class="dashboard-card chart-card" style="display: flex; flex-direction: column; justify-content: space-between;">
         <h2 style="font-size: 20px; margin-bottom: 1.5rem;">Composição das Despesas</h2>
         
         {% if despesas_totais > 0 %}
@@ -193,7 +193,7 @@
 </div>
 
 <!-- LUCRO DETALHADO POR CAMINHÃO (Para ver qual veículo rende mais) -->
-<div class="dashboard-card" style="margin-bottom: 2.5rem;">
+<div class="dashboard-card fleet-profit-card" style="margin-bottom: 2.5rem;">
     <h2 style="font-size: 22px; margin-bottom: 1.5rem;">Lucratividade Individual por Veículo (Frota)</h2>
     
     <div class="table-responsive">
@@ -245,120 +245,12 @@
     </div>
 </div>
 
-<!-- BLOCO DE ASSINATURAS EXCLUSIVO PARA IMPRESSÃO -->
-<div class="print-footer" style="display: none; margin-top: 50px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1.5px solid #dddddd; padding-top: 25px;">
-        <div style="text-align: center; width: 45%;">
-            <p style="margin: 0 0 5px 0; font-size: 13px; font-weight: 700; color:#000000;">Emitido por:</p>
-            <div style="border-top: 1.5px solid #000000; width: 100%; margin-top: 35px;"></div>
-            <p style="margin: 5px 0 0 0; font-size: 12px; color: #555555; font-weight: 600;">Jonat Girardi &bull; JG-Frotas</p>
-        </div>
-        
-        <div style="text-align: center; width: 45%;">
-            <p style="margin: 0 0 5px 0; font-size: 13px; font-weight: 700; color:#000000;">Aprovado por:</p>
-            <div style="border-top: 1.5px solid #000000; width: 100%; margin-top: 35px;"></div>
-            <p style="margin: 5px 0 0 0; font-size: 12px; color: #555555; font-weight: 600;">Assinatura do Proprietário</p>
-        </div>
-    </div>
-    
-    <div style="text-align: center; margin-top: 30px; font-size: 10px; color: #777777; border-top: 1px dashed #eeeeee; padding-top: 10px; font-weight: 500;">
+<!-- RODAPÉ EXCLUSIVO PARA IMPRESSÃO -->
+<div class="print-footer" style="display: none; margin-top: 30px;">
+    <div style="text-align: center; font-size: 10px; color: #777777; border-top: 1px dashed #dddddd; padding-top: 10px; font-weight: 500;">
         Documento gerado eletronicamente pelo RotaFácil. Todos os direitos reservados &copy; 2026.
     </div>
 </div>
-
-<!-- ESTILO ADICIONAL DE IMPRESSÃO (Esconde os menus ao imprimir no papel/PDF!) -->
-<style>
-    @media print {
-        /* Oculta tudo que não pertence ao papel impresso */
-        .sidebar, .bottom-bar, .btn, .page-header, #despesasPieChart, .chart-container, .dashboard-card:nth-child(3) {
-            display: none !important;
-        }
-        
-        /* Exibe as seções exclusivas de impressão */
-        .print-header, .print-costs-table, .print-footer {
-            display: block !important;
-        }
-        
-        body {
-            background-color: #ffffff !important;
-            color: #000000 !important;
-            font-size: 13px !important;
-            font-family: 'Outfit', 'Helvetica Neue', Arial, sans-serif !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        
-        .main-content {
-            margin-left: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            overflow: visible !important;
-        }
-        
-        .dashboard-row {
-            grid-template-columns: 1fr !important;
-            gap: 1.5rem !important;
-            margin-bottom: 2rem !important;
-        }
-        
-        .dashboard-card {
-            border: 1px solid #000000 !important;
-            border-radius: 12px !important;
-            box-shadow: none !important;
-            padding: 1.5rem !important;
-            background-color: #ffffff !important;
-            color: #000000 !important;
-            page-break-inside: avoid !important;
-        }
-        
-        .table-responsive {
-            border: 1px solid #000000 !important;
-            box-shadow: none !important;
-            border-radius: 12px !important;
-            page-break-inside: avoid !important;
-            width: 100% !important;
-        }
-        
-        .custom-table {
-            min-width: 100% !important;
-            width: 100% !important;
-        }
-        
-        .custom-table th {
-            background-color: #f1f5f9 !important;
-            color: #000000 !important;
-            border-bottom: 2px solid #000000 !important;
-            padding: 10px !important;
-            font-size: 12px !important;
-            font-weight: 800 !important;
-        }
-        
-        .custom-table td {
-            padding: 10px !important;
-            border-bottom: 1px solid #e2e8f0 !important;
-            font-size: 12px !important;
-            font-weight: 500 !important;
-        }
-        
-        .truck-plate-badge {
-            border: 1.5px solid #000000 !important;
-            color: #000000 !important;
-            background-color: #ffffff !important;
-            padding: 3px 8px !important;
-            font-weight: 800 !important;
-            border-radius: 6px !important;
-            font-family: monospace !important;
-        }
-        
-        .badge {
-            border: 1px solid #000000 !important;
-            background-color: #ffffff !important;
-            color: #000000 !important;
-            font-weight: 800 !important;
-        }
-    }
-</style>
 {% endblock %}
 
 {% block scripts %}

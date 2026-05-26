@@ -94,7 +94,7 @@
             
             <!-- Barra de Status do Usuário Logado (Visível no Computador e Celular) -->
             {% if session.get('user_id') %}
-            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-bottom: 2rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border);">
+            <div class="user-status-bar" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-bottom: 2rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border);">
                 <span style="font-weight: 600; color: var(--text-muted); font-size: 15px; display: inline-flex; align-items: center; gap: 6px;">
                     <!-- Ícone Usuário SVG -->
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 18px; height: 18px;">

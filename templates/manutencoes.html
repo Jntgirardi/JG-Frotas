@@ -26,7 +26,7 @@
                 <th>Serviço / Descrição</th>
                 <th>Oficina / Fornecedor</th>
                 <th>Valor do Custo</th>
-                <th style="text-align: right;">Ações</th>
+                <th class="actions-col" style="text-align: right;">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -52,9 +52,17 @@
                 <td style="color: var(--danger); font-weight: 800; font-size: 18px;">
                     R$ {{ "{:,.2f}".format(manutencao.custo).replace(",", "X").replace(".", ",").replace("X", ".") }}
                 </td>
-                <td style="text-align: right;">
+                <td class="actions-col" style="text-align: right;">
                     <div class="table-actions" style="justify-content: flex-end;">
-                        <button class="btn btn-secondary btn-sm" style="padding: 8px 12px; min-height: 36px;" onclick="editarManutencaoModal({{ manutencao.id }}, {{ manutencao.caminhao_id }}, '{{ manutencao.descricao }}', {{ manutencao.custo }}, '{{ manutencao.data.strftime('%Y-%m-%d') }}', '{{ manutencao.tipo }}', '{{ manutencao.oficina or '' }}')">
+                        <button class="btn btn-secondary btn-sm edit-manutencao-btn" 
+                                style="padding: 8px 12px; min-height: 36px;" 
+                                data-id="{{ manutencao.id }}"
+                                data-caminhao-id="{{ manutencao.caminhao_id }}"
+                                data-descricao="{{ manutencao.descricao }}"
+                                data-custo="{{ manutencao.custo }}"
+                                data-data="{{ manutencao.data.strftime('%Y-%m-%d') }}"
+                                data-tipo="{{ manutencao.tipo }}"
+                                data-oficina="{{ manutencao.oficina or '' }}">
                             ✏️
                         </button>
                         <a href="{{ url_for('deletar_manutencao', id=manutencao.id) }}" class="btn btn-danger btn-sm" style="padding: 8px 12px; min-height: 36px;" onclick="return confirm('Tem certeza que deseja excluir esta manutenção?')">
@@ -223,19 +231,31 @@
     // Preenche data com a de hoje automaticamente no cadastro
     document.getElementById('data').value = new Date().toISOString().substring(0, 10);
 
-    // Preenche e exibe modal de edição
-    function editarManutencaoModal(id, caminhaoId, descricao, custo, data, tipo, oficina) {
-        const form = document.getElementById('form-editar-manutencao');
-        form.action = `/manutencoes/editar/${id}`;
-        
-        abrirModalEdicao('modal-editar-manutencao', {
-            caminhao_id: caminhaoId,
-            descricao: descricao,
-            custo: custo,
-            data: data,
-            tipo: tipo,
-            oficina: oficina
+    // Lógica moderna para abrir e preencher o modal de edição via atributos data-*
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.edit-manutencao-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const caminhaoId = btn.getAttribute('data-caminhao-id');
+                const descricao = btn.getAttribute('data-descricao');
+                const custo = btn.getAttribute('data-custo');
+                const dataVal = btn.getAttribute('data-data');
+                const tipo = btn.getAttribute('data-tipo');
+                const oficina = btn.getAttribute('data-oficina');
+
+                const form = document.getElementById('form-editar-manutencao');
+                form.action = `/manutencoes/editar/${id}`;
+                
+                abrirModalEdicao('modal-editar-manutencao', {
+                    caminhao_id: caminhaoId,
+                    descricao: descricao,
+                    custo: custo,
+                    data: dataVal,
+                    tipo: tipo,
+                    oficina: oficina
+                });
+            });
         });
-    }
+    });
 </script>
 {% endblock %}

@@ -40,7 +40,7 @@
                 <th>Gastos Operacionais</th>
                 <th>Lucro Líquido</th>
                 <th>Pagamento</th>
-                <th style="text-align: right;">Ações</th>
+                <th class="actions-col" style="text-align: right;">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -79,9 +79,21 @@
                         </a>
                     {% endif %}
                 </td>
-                <td style="text-align: right;">
+                <td class="actions-col" style="text-align: right;">
                     <div class="table-actions" style="justify-content: flex-end;">
-                        <button class="btn btn-secondary btn-sm" style="padding: 8px 12px; min-height: 36px;" onclick="editarViagemModal({{ viagem.id }}, {{ viagem.caminhao_id }}, '{{ viagem.origem }}', '{{ viagem.destino }}', '{{ viagem.data.strftime('%Y-%m-%d') }}', {{ viagem.valor_frete }}, {{ viagem.custo_combustivel }}, {{ viagem.custo_pedagio }}, {{ viagem.outros_custos }}, '{{ viagem.pago }}', '{{ viagem.observacoes or '' }}')">
+                        <button class="btn btn-secondary btn-sm edit-viagem-btn" 
+                                style="padding: 8px 12px; min-height: 36px;" 
+                                data-id="{{ viagem.id }}"
+                                data-caminhao-id="{{ viagem.caminhao_id }}"
+                                data-origem="{{ viagem.origem }}"
+                                data-destino="{{ viagem.destino }}"
+                                data-data="{{ viagem.data.strftime('%Y-%m-%d') }}"
+                                data-valor-frete="{{ viagem.valor_frete }}"
+                                data-custo-combustivel="{{ viagem.custo_combustivel }}"
+                                data-custo-pedagio="{{ viagem.custo_pedagio }}"
+                                data-outros-custos="{{ viagem.outros_custos }}"
+                                data-pago="{{ 'True' if viagem.pago else 'False' }}"
+                                data-observacoes="{{ viagem.observacoes or '' }}">
                             ✏️
                         </button>
                         <a href="{{ url_for('deletar_viagem', id=viagem.id) }}" class="btn btn-danger btn-sm" style="padding: 8px 12px; min-height: 36px;" onclick="return confirm('Tem certeza que deseja excluir esta viagem?')">
@@ -338,62 +350,79 @@
         });
     }
 
-    // Abre o modal de edição de viagem pré-preenchido
-    function editarViagemModal(id, caminhaoId, origem, destino, data, frete, combustivel, pedagio, outros, pago, observacoes) {
-        const form = document.getElementById('form-editar-viagem');
-        form.action = `/viagens/editar/${id}`;
-        
-        abrirModalEdicao('modal-editar-viagem', {
-            caminhao_id: caminhaoId,
-            origem: origem,
-            destino: destino,
-            data: data,
-            valor_frete: frete,
-            custo_combustivel: combustivel,
-            custo_pedagio: pedagio,
-            outros_custos: outros,
-            pago: pago,
-            observacoes: observacoes
-        });
+    // Lógica moderna para abrir o modal de edição de viagem pré-preenchido via atributos data-*
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.edit-viagem-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const caminhaoId = btn.getAttribute('data-caminhao-id');
+                const origem = btn.getAttribute('data-origem');
+                const destino = btn.getAttribute('data-destino');
+                const dataVal = btn.getAttribute('data-data');
+                const frete = btn.getAttribute('data-valor-frete');
+                const combustivel = btn.getAttribute('data-custo-combustivel');
+                const pedagio = btn.getAttribute('data-custo-pedagio');
+                const outros = btn.getAttribute('data-outros-custos');
+                const pago = btn.getAttribute('data-pago');
+                const observacoes = btn.getAttribute('data-observacoes');
 
-        // Configura a escuta no modal de edição também para atualizar o lucro simulado em tempo real
-        const inputFrete = document.getElementById('edit_valor_frete');
-        const inputCombustivel = document.getElementById('edit_custo_combustivel');
-        const inputPedagio = document.getElementById('edit_custo_pedagio');
-        const inputOutros = document.getElementById('edit_outros_custos');
-        const boxLucro = document.getElementById('lucro_preview_valor_edit');
+                const form = document.getElementById('form-editar-viagem');
+                form.action = `/viagens/editar/${id}`;
+                
+                abrirModalEdicao('modal-editar-viagem', {
+                    caminhao_id: caminhaoId,
+                    origem: origem,
+                    destino: destino,
+                    data: dataVal,
+                    valor_frete: frete,
+                    custo_combustivel: combustivel,
+                    custo_pedagio: pedagio,
+                    outros_custos: outros,
+                    pago: pago,
+                    observacoes: observacoes
+                });
 
-        const inputs = [inputFrete, inputCombustivel, inputPedagio, inputOutros];
+                // Configura a escuta no modal de edição também para atualizar o lucro simulado em tempo real
+                const inputFrete = document.getElementById('edit_valor_frete');
+                const inputCombustivel = document.getElementById('edit_custo_combustivel');
+                const inputPedagio = document.getElementById('edit_custo_pedagio');
+                const inputOutros = document.getElementById('edit_outros_custos');
+                const boxLucro = document.getElementById('lucro_preview_valor_edit');
 
-        function calcularEdit() {
-            const freteVal = parseFloat(inputFrete.value) || 0;
-            const combustivelVal = parseFloat(inputCombustivel.value) || 0;
-            const pedagioVal = parseFloat(inputPedagio.value) || 0;
-            const outrosVal = parseFloat(inputOutros.value) || 0;
+                const inputs = [inputFrete, inputCombustivel, inputPedagio, inputOutros];
 
-            const lucroVal = freteVal - (combustivelVal + pedagioVal + outrosVal);
-            boxLucro.textContent = lucroVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                function calcularEdit() {
+                    const freteVal = parseFloat(inputFrete.value) || 0;
+                    const combustivelVal = parseFloat(inputCombustivel.value) || 0;
+                    const pedagioVal = parseFloat(inputPedagio.value) || 0;
+                    const outrosVal = parseFloat(inputOutros.value) || 0;
 
-            const container = boxLucro.closest('.lucro-preview-box');
-            if (container) {
-                if (lucroVal < 0) {
-                    container.style.backgroundColor = 'var(--danger-light)';
-                    container.style.color = 'var(--danger)';
-                    container.style.borderColor = 'var(--danger)';
-                } else {
-                    container.style.backgroundColor = 'var(--success-light)';
-                    container.style.color = 'var(--success)';
-                    container.style.borderColor = 'var(--success)';
+                    const lucroVal = freteVal - (combustivelVal + pedagioVal + outrosVal);
+                    boxLucro.textContent = lucroVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                    const container = boxLucro.closest('.lucro-preview-box');
+                    if (container) {
+                        if (lucroVal < 0) {
+                            container.style.backgroundColor = 'var(--danger-light)';
+                            container.style.color = 'var(--danger)';
+                            container.style.borderColor = 'var(--danger)';
+                        } else {
+                            container.style.backgroundColor = 'var(--success-light)';
+                            container.style.color = 'var(--success)';
+                            container.style.borderColor = 'var(--success)';
+                        }
+                    }
                 }
-            }
-        }
 
-        inputs.forEach(inpt => {
-            if (inpt) inpt.addEventListener('input', calcularEdit);
+                inputs.forEach(inpt => {
+                    if (inpt) inpt.removeEventListener('input', calcularEdit); // Evita múltiplos listeners acumulados
+                    if (inpt) inpt.addEventListener('input', calcularEdit);
+                });
+
+                // Chama cálculo na abertura inicial
+                calcularEdit();
+            });
         });
-
-        // Chama cálculo na abertura inicial
-        calcularEdit();
-    }
+    });
 </script>
 {% endblock %}
