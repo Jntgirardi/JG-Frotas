@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RotaFácil{% endblock %} - Gestão de Transportes</title>
+    <!-- Folha de estilo customizada -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Container de Alertas (Mensagens do Flask) -->
+    <div class="alert-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button style="background:none; border:none; color:inherit; font-size:20px; cursor:pointer;" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="app-container">
+        
+        <!-- BARRA LATERAL (Apenas para Computador) -->
+        <aside class="sidebar">
+            <div class="brand-section">
+                <div class="brand-logo">RF</div>
+                <div class="brand-title">RotaFácil</div>
+            </div>
+            
+            <nav class="nav-menu">
+                <li class="nav-item {% if request.path == '/' %}active{% endif %}">
+                    <a href="{{ url_for('dashboard') }}">
+                        <!-- Ícone Dashboard (Casa) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        Painel Geral
+                    </a>
+                </li>
+                <li class="nav-item {% if request.path == '/caminhoes' %}active{% endif %}">
+                    <a href="{{ url_for('caminhoes') }}">
+                        <!-- Ícone Caminhão -->
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17h5" />
+                        </svg>
+                        Minha Frota
+                    </a>
+                </li>
+                <li class="nav-item {% if request.path == '/viagens' %}active{% endif %}">
+                    <a href="{{ url_for('viagens') }}">
+                        <!-- Ícone Rota/Viagem (Mapa) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        Viagens & Rotas
+                    </a>
+                </li>
+                <li class="nav-item {% if request.path == '/manutencoes' %}active{% endif %}">
+                    <a href="{{ url_for('manutencoes') }}">
+                        <!-- Ícone Manutenção (Chave de Boca) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Manutenções
+                    </a>
+                </li>
+                <li class="nav-item {% if request.path == '/financeiro' %}active{% endif %}">
+                    <a href="{{ url_for('financeiro') }}">
+                        <!-- Ícone Finanças (Cifrão/Gráfico) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Relatório Financeiro
+                    </a>
+                </li>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p>RotaFácil v1.0</p>
+                <p>© 2026 - Frota & Financeiro</p>
+            </div>
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL DA PÁGINA -->
+        <main class="main-content">
+            
+            <!-- Barra de Status do Usuário Logado (Visível no Computador e Celular) -->
+            {% if session.get('user_id') %}
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-bottom: 2rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border);">
+                <span style="font-weight: 600; color: var(--text-muted); font-size: 15px; display: inline-flex; align-items: center; gap: 6px;">
+                    <!-- Ícone Usuário SVG -->
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 18px; height: 18px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Olá, {{ session.get('username') }}
+                </span>
+                <span style="color: var(--border);">|</span>
+                <a href="{{ url_for('logout') }}" style="color: var(--danger); font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; transition: var(--transition-smooth);" onmouseover="this.style.transform='translateX(3px)'" onmouseout="this.style.transform='none'">
+                    Sair
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+                    </svg>
+                </a>
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+        
+        <!-- BARRA DE NAVEGAÇÃO INFERIOR (Apenas para Celular) -->
+        <nav class="bottom-bar">
+            <a href="{{ url_for('dashboard') }}" class="bottom-bar-item {% if request.path == '/' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                Painel
+            </a>
+            <a href="{{ url_for('caminhoes' ) }}" class="bottom-bar-item {% if request.path == '/caminhoes' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17h5" />
+                </svg>
+                Frota
+            </a>
+            <a href="{{ url_for('viagens') }}" class="bottom-bar-item {% if request.path == '/viagens' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                Viagens
+            </a>
+            <a href="{{ url_for('manutencoes') }}" class="bottom-bar-item {% if request.path == '/manutencoes' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Oficina
+            </a>
+            <a href="{{ url_for('financeiro') }}" class="bottom-bar-item {% if request.path == '/financeiro' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Finanças
+            </a>
+        </nav>
+
+    </div>
+
+    <!-- Scripts utilitários -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
