@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block title %}Minha Frota{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Minha Frota</h1>
+        <p class="page-subtitle">Cadastre e acompanhe o status e a saúde mecânica dos seus caminhões.</p>
+    </div>
+    
+    <button class="btn btn-primary" data-open-modal="modal-adicionar-caminhao">
+        ➕ Adicionar Novo Caminhão
+    </button>
+</div>
+
+<!-- GRADE DOS CAMINHÕES DA FROTA -->
+<div class="card-grid">
+    {% for caminhao in caminhoes %}
+    <div class="info-card {% if caminhao.status == 'Disponível' %}primary{% elif caminhao.status == 'Em Viagem' %}success{% else %}warning{% endif %}" style="padding-bottom: 1.5rem;">
+        
+        <!-- Plate Display styled like real Mercosul plate for amazing realism -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+            <div style="border: 2px solid var(--text-main); border-radius: var(--radius-sm); overflow: hidden; display: inline-flex; flex-direction: column; width: 140px; box-shadow: var(--shadow-sm);">
+                <!-- Top Blue Bar of Mercosul -->
+                <div style="background-color: #003399; color: white; font-size: 10px; font-weight: 800; text-align: center; padding: 2px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                    <svg width="10" height="7" viewBox="0 0 10 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="10" height="7" fill="#003399"/>
+                        <circle cx="5" cy="3.5" r="1.5" fill="#FFCC00"/>
+                    </svg>
+                    BRASIL
+                </div>
+                <!-- Plate Number -->
+                <div style="background-color: white; color: black; font-size: 20px; font-weight: 800; text-align: center; padding: 4px 0; font-family: monospace; letter-spacing: 1px;">
+                    {{ caminhao.placa }}
+                </div>
+            </div>
+            
+            {% if caminhao.status == 'Disponível' %}
+                <span class="badge badge-primary"><span class="badge-dot"></span>Livre</span>
+            {% elif caminhao.status == 'Em Viagem' %}
+                <span class="badge badge-success"><span class="badge-dot"></span>Rodando</span>
+            {% else %}
+                <span class="badge badge-warning"><span class="badge-dot"></span>Na Oficina</span>
+            {% endif %}
+        </div>
+
+        <div>
+            <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 4px;">{{ caminhao.modelo }}</h2>
+            <p style="color: var(--text-muted); font-size: 16px; margin-bottom: 1rem;">
+                Ano: <strong>{{ caminhao.ano }}</strong> • Cor: <strong>{{ caminhao.cor or 'Não informada' }}</strong>
+            </p>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 13px; color: var(--text-muted);">
+                Viagens feitas: <strong>{{ caminhao.viagens | length }}</strong>
+            </div>
+            
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary btn-sm" onclick="editarCaminhaoModal({{ caminhao.id }}, '{{ caminhao.placa }}', '{{ caminhao.modelo }}', {{ caminhao.ano }}, '{{ caminhao.cor }}', '{{ caminhao.status }}')">
+                    ✏️ Editar
+                </button>
+                <a href="{{ url_for('deletar_caminhao', id=caminhao.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja excluir o caminhão {{ caminhao.placa }}? Todas as viagens e manutenções associadas a ele também serão apagadas!')" style="padding: 8px 12px;">
+                    🗑️
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; border: 2px dashed var(--border); border-radius: var(--radius-lg); background-color: var(--bg-card);">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width: 80px; height: 80px; color: var(--text-muted); margin-bottom: 15px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 17a2 2 0 11-4 0 2 2 0 014 0zM9 17a2 2 0 11-4 0 2 2 0 014 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17h5" />
+        </svg>
+        <h2 style="font-size: 22px; color: var(--text-main); margin-bottom: 8px;">Nenhum caminhão cadastrado</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px; max-width: 400px; margin-left: auto; margin-right: auto;">
+            Cadastre seu primeiro veículo para começar a controlar viagens, rotas e custos de manutenção.
+        </p>
+        <button class="btn btn-primary" data-open-modal="modal-adicionar-caminhao">
+            Cadastrar Meu Primeiro Caminhão
+        </button>
+    </div>
+    {% endfor %}
+</div>
+
+
+<!-- ==========================================
+     MODAL DE CADASTRO DE NOVO CAMINHÃO
+     ========================================== -->
+<div class="modal-backdrop" id="modal-adicionar-caminhao">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2 style="font-size: 22px;">Adicionar Novo Caminhão</h2>
+            <button class="modal-close">&times;</button>
+        </div>
+        
+        <form action="{{ url_for('caminhoes') }}" method="POST">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="placa">Placa do Veículo *</label>
+                    <input type="text" class="form-control" name="placa" id="placa" placeholder="Ex: BRA2E19 ou ABC-1234" required style="text-transform: uppercase;">
+                    <span style="font-size: 13px; color: var(--text-muted);">Suporta formato padrão nacional (ABC-1234) ou Mercosul (ABC1D23).</span>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="modelo">Marca e Modelo *</label>
+                    <input type="text" class="form-control" name="modelo" id="modelo" placeholder="Ex: Volvo FH 540 Globetrotter" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="ano">Ano Fabricação *</label>
+                        <input type="number" class="form-control" name="ano" id="ano" min="1950" max="2030" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="cor">Cor</label>
+                        <input type="text" class="form-control" name="cor" id="cor" placeholder="Ex: Branco, Vermelho">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="status">Status Inicial</label>
+                    <select class="form-control" name="status" id="status">
+                        <option value="Disponível">Livre (Disponível para viagem)</option>
+                        <option value="Em Viagem">Em Viagem (Em rota)</option>
+                        <option value="Em Manutenção">Em Oficina (Manutenção)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-close-modal>Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm">Cadastrar Caminhão</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODAL DE EDIÇÃO DE CAMINHÃO
+     ========================================== -->
+<div class="modal-backdrop" id="modal-editar-caminhao">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2 style="font-size: 22px;">Editar Caminhão</h2>
+            <button class="modal-close">&times;</button>
+        </div>
+        
+        <form id="form-editar-caminhao" action="" method="POST">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="edit_placa">Placa do Veículo *</label>
+                    <input type="text" class="form-control" name="placa" id="edit_placa" placeholder="Ex: BRA2E19" required style="text-transform: uppercase;">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="edit_modelo">Marca e Modelo *</label>
+                    <input type="text" class="form-control" name="modelo" id="edit_modelo" placeholder="Ex: Volvo FH 540" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="edit_ano">Ano Fabricação *</label>
+                        <input type="number" class="form-control" name="ano" id="edit_ano" min="1950" max="2030" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_cor">Cor</label>
+                        <input type="text" class="form-control" name="cor" id="edit_cor">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="edit_status">Status Atual</label>
+                    <select class="form-control" name="status" id="edit_status">
+                        <option value="Disponível">Livre (Disponível para viagem)</option>
+                        <option value="Em Viagem">Em Viagem (Em rota)</option>
+                        <option value="Em Manutenção">Em Oficina (Manutenção)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-close-modal>Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm">Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Autofill do ano atual no formulário de cadastro
+    document.getElementById('ano').value = new Date().getFullYear();
+
+    // Lógica para abrir o modal de edição já preenchido
+    function editarCaminhaoModal(id, placa, modelo, ano, cor, status) {
+        const form = document.getElementById('form-editar-caminhao');
+        form.action = `/caminhoes/editar/${id}`;
+        
+        abrirModalEdicao('modal-editar-caminhao', {
+            placa: placa,
+            modelo: modelo,
+            ano: ano,
+            cor: cor,
+            status: status
+        });
+    }
+</script>
+{% endblock %}

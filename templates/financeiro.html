@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatório Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Relatório Financeiro Geral</h1>
+        <p class="page-subtitle">Demonstrativo de fluxo de caixa, custos operacionais segregados e balanço de rentabilidade por caminhão.</p>
+    </div>
+    
+    <button class="btn btn-secondary" onclick="window.print()" style="gap: 8px;">
+        🖨️ Imprimir Balanço
+    </button>
+</div>
+
+<!-- CONTAINER PRINCIPAL DO FLUXO DE CAIXA -->
+<div class="dashboard-row" style="grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem;">
+    
+    <!-- DEMONSTRATIVO DE RECEITAS E DESPESAS -->
+    <div class="dashboard-card" style="padding: 2rem;">
+        <h2 style="font-size: 22px; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); padding-bottom: 10px; color: var(--primary);">
+            Demonstrativo de Fluxo de Caixa
+        </h2>
+        
+        <div style="display: flex; flex-direction: column; gap: 18px;">
+            <!-- Receita Bruta -->
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; font-size: 18px;">(+) Receitas de Frete</span>
+                <span style="color: var(--success); font-weight: 850; font-size: 20px;">
+                    R$ {{ "{:,.2f}".format(receitas_totais).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                </span>
+            </div>
+            
+            <hr style="border: 0; border-top: 1.5px solid var(--border);">
+            
+            <!-- Detalhamento de Custos -->
+            <div>
+                <h3 style="font-size: 15px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; font-weight: 700;">(-) Custos Operacionais e Mecânicos</h3>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px; padding-left: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 17px;">
+                        <span>1. Combustível (Diesel)</span>
+                        <span style="color: var(--danger); font-weight: 700;">
+                            R$ {{ "{:,.2f}".format(diesel_total).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                        </span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 17px;">
+                        <span>2. Pedágios de Rota</span>
+                        <span style="color: var(--danger); font-weight: 700;">
+                            R$ {{ "{:,.2f}".format(pedagio_total).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                        </span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 17px;">
+                        <span>3. Outras Despesas de Viagem</span>
+                        <span style="color: var(--danger); font-weight: 700;">
+                            R$ {{ "{:,.2f}".format(outros_viagens_total).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                        </span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 17px;">
+                        <span>4. Oficina / Manutenção Mecânica</span>
+                        <span style="color: var(--danger); font-weight: 700;">
+                            R$ {{ "{:,.2f}".format(manutencao_total).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1.5px solid var(--border);">
+
+            <!-- Total Despesas -->
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; font-size: 18px;">(=) Total Despesas Pagas</span>
+                <span style="color: var(--danger); font-weight: 850; font-size: 20px;">
+                    R$ {{ "{:,.2f}".format(despesas_totais).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                </span>
+            </div>
+
+            <!-- Divisor Final Forte -->
+            <div style="border-top: 3px double var(--border); margin: 5px 0;"></div>
+
+            <!-- Sobra/Saldo Geral -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background-color: {% if saldo_geral >= 0 %}var(--success-light){% else %}var(--danger-light){% endif %}; border-radius: var(--radius-md);">
+                <span style="font-weight: 800; font-size: 20px; color: var(--text-main);">SALDO LÍQUIDO GERAL</span>
+                <span style="font-weight: 900; font-size: 24px; color: {% if saldo_geral >= 0 %}var(--success){% else %}var(--danger){% endif %};">
+                    R$ {{ "{:,.2f}".format(saldo_geral).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- DISTRIBUIÇÃO GRÁFICA DE DESPESAS (Pie Chart) -->
+    <div class="dashboard-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <h2 style="font-size: 20px; margin-bottom: 1.5rem;">Composição das Despesas</h2>
+        
+        {% if despesas_totais > 0 %}
+        <div style="position: relative; height: 300px; width: 100%;">
+            <canvas id="despesasPieChart"></canvas>
+        </div>
+        {% else %}
+        <div style="height: 100%; display:flex; align-items:center; justify-content:center; text-align: center; border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 40px 20px;">
+            <p style="color: var(--text-muted); font-weight: 600;">Nenhuma despesa registrada para composição gráfica.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- LUCRO DETALHADO POR CAMINHÃO (Para ver qual veículo rende mais) -->
+<div class="dashboard-card" style="margin-bottom: 2.5rem;">
+    <h2 style="font-size: 22px; margin-bottom: 1.5rem;">Lucratividade Individual por Veículo (Frota)</h2>
+    
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Placa do Caminhão</th>
+                    <th>Marca / Modelo</th>
+                    <th style="text-align: center;">Qtd Viagens</th>
+                    <th>Receita de Fretes</th>
+                    <th>Despesas (Rotas + Oficina)</th>
+                    <th>Saldo Líquido Gerado</th>
+                    <th>Aproveitamento (Margem)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for analise in analise_frota %}
+                <tr>
+                    <td>
+                        <span class="truck-plate-badge" style="font-size: 14px; padding: 4px 10px;">
+                            {{ analise['caminhao'].placa }}
+                        </span>
+                    </td>
+                    <td style="font-weight: 700;">{{ analise['caminhao'].modelo }}</td>
+                    <td style="text-align: center; font-weight: 800; font-size: 18px;">{{ analise['viagens_qtd'] }}</td>
+                    <td style="color: var(--success); font-weight: 700;">
+                        R$ {{ "{:,.2f}".format(analise['receita']).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                    </td>
+                    <td style="color: var(--danger);">
+                        R$ {{ "{:,.2f}".format(analise['despesa']).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                    </td>
+                    <td style="font-weight: 850; font-size: 19px; color: {% if analise['saldo'] >= 0 %}var(--success){% else %}var(--danger){% endif %};">
+                        R$ {{ "{:,.2f}".format(analise['saldo']).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                    </td>
+                    <td style="font-weight: 700;">
+                        {% if analise['receita'] > 0 %}
+                            {% set margem = (analise['saldo'] / analise['receita']) * 100 %}
+                            <span style="color: {% if margem >= 40 %}var(--success){% elif margem >= 15 %}var(--primary){% else %}var(--warning){% endif %}; font-size: 18px;">
+                                {{ "{:0.1f}%".format(margem) }}
+                            </span>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-size: 15px;">Sem fretes</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ESTILO ADICIONAL DE IMPRESSÃO (Esconde os menus ao imprimir no papel/PDF!) -->
+<style>
+    @media print {
+        body {
+            background-color: #fff !important;
+            color: #000 !important;
+            font-size: 14px !important;
+        }
+        .sidebar, .bottom-bar, .btn, .page-header div:last-child {
+            display: none !important;
+        }
+        .main-content {
+            margin-left: 0 !important;
+            padding: 0 !important;
+        }
+        .dashboard-row {
+            grid-template-columns: 1fr !important;
+        }
+        .dashboard-card {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
+        .table-responsive {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .custom-table th {
+            background-color: #f1f5f9 !important;
+            color: #000 !important;
+        }
+        .truck-plate-badge {
+            border: 1px solid #000 !important;
+            color: #000 !important;
+            background: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    {% if despesas_totais > 0 %}
+    // Gráfico de Pizza (Composition of Expenses)
+    const ctxPie = document.getElementById('despesasPieChart').getContext('2d');
+    
+    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const labelTextColor = isDarkMode ? '#cbd5e1' : '#475569';
+
+    new Chart(ctxPie, {
+        type: 'doughnut',
+        data: {
+            labels: ['Diesel (Combustível)', 'Pedágios', 'Outros custos de Viagem', 'Oficina (Manutenção)'],
+            datasets: [{
+                data: [
+                    {{ diesel_total }},
+                    {{ pedagio_total }},
+                    {{ outros_viagens_total }},
+                    {{ manutencao_total }}
+                ],
+                backgroundColor: [
+                    'rgba(239, 68, 68, 0.85)',   // Vermelho (Diesel)
+                    'rgba(245, 158, 11, 0.85)',  // Amarelo/Laranja (Pedágio)
+                    'rgba(107, 114, 128, 0.85)', // Cinza (Outros)
+                    'rgba(79, 70, 229, 0.85)'    // Roxo/Indigo (Manutenção)
+                ],
+                borderWidth: 2,
+                borderColor: isDarkMode ? '#1e293b' : '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: labelTextColor,
+                        font: {
+                            family: 'Outfit',
+                            size: 13,
+                            weight: 'bold'
+                        },
+                        padding: 15
+                    }
+                }
+            },
+            cutout: '60%' // Efeito rosquinha super moderno
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}

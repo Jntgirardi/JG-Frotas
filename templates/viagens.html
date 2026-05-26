@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+
+{% block title %}Viagens & Rotas{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Viagens & Rotas</h1>
+        <p class="page-subtitle">Controle de fretes, gastos operacionais de rotas e status de recebimento.</p>
+    </div>
+    
+    <button class="btn btn-primary" data-open-modal="modal-viagem-geral">
+        ➕ Registrar Nova Viagem
+    </button>
+</div>
+
+<!-- FILTROS DE VISUALIZAÇÃO LEVES E RÁPIDOS -->
+<div style="display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap;">
+    <button class="btn btn-secondary btn-sm active-filter" onclick="filtrarViagens('todas', this)" style="background-color: var(--primary); color: #fff;">
+        Todas as Viagens ({{ viagens | length }})
+    </button>
+    <button class="btn btn-secondary btn-sm" onclick="filtrarViagens('pagas', this)">
+        🟢 Pagas ({{ viagens | selectattr('pago', 'equalto', True) | list | length }})
+    </button>
+    <button class="btn btn-secondary btn-sm" onclick="filtrarViagens('pendentes', this)">
+        🟡 Pendentes ({{ viagens | selectattr('pago', 'equalto', False) | list | length }})
+    </button>
+</div>
+
+<!-- TABELA DE REGISTROS -->
+{% if viagens %}
+<div class="table-responsive">
+    <table class="custom-table" id="tabela-viagens">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Caminhão</th>
+                <th>Origem / Destino</th>
+                <th>Frete Bruto</th>
+                <th>Gastos Operacionais</th>
+                <th>Lucro Líquido</th>
+                <th>Pagamento</th>
+                <th style="text-align: right;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for viagem in viagens %}
+            <tr data-pago="{{ 'pago' if viagem.pago else 'pendente' }}">
+                <td>{{ viagem.data.strftime('%d/%m/%Y') }}</td>
+                <td>
+                    <span class="truck-plate-badge" style="font-size: 13px; padding: 4px 8px;">
+                        {{ viagem.caminhao.placa }}
+                    </span>
+                </td>
+                <td>
+                    <div style="font-weight: 700;">{{ viagem.destino }}</div>
+                    <div style="font-size: 13px; color: var(--text-muted);">Origem: {{ viagem.origem }}</div>
+                </td>
+                <td style="color: var(--success); font-weight: 700;">
+                    R$ {{ "{:,.2f}".format(viagem.valor_frete).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                </td>
+                <td style="color: var(--danger); font-size: 15px;">
+                    <span style="font-weight: 500;">R$ {{ "{:,.2f}".format(viagem.custo_combustivel + viagem.custo_pedagio + viagem.outros_custos).replace(",", "X").replace(".", ",").replace("X", ".") }}</span>
+                    <div style="font-size: 11px; color: var(--text-muted);">
+                        Diesel: R$ {{ "{:0.0f}".format(viagem.custo_combustivel) }} | Ped: R$ {{ "{:0.0f}".format(viagem.custo_pedagio) }}
+                    </div>
+                </td>
+                <td style="font-weight: 800; font-size: 18px; color: {% if viagem.lucro_liquido >= 0 %}var(--success){% else %}var(--danger){% endif %};">
+                    R$ {{ "{:,.2f}".format(viagem.lucro_liquido).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                </td>
+                <td>
+                    {% if viagem.pago %}
+                        <a href="{{ url_for('alternar_pago_viagem', id=viagem.id) }}" class="badge badge-success" style="font-size: 13px;" title="Clique para marcar como Pendente">
+                            <span class="badge-dot"></span>Recebido
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('alternar_pago_viagem', id=viagem.id) }}" class="badge badge-warning" style="font-size: 13px;" title="Clique para marcar como Recebido">
+                            <span class="badge-dot"></span>Pendente
+                        </a>
+                    {% endif %}
+                </td>
+                <td style="text-align: right;">
+                    <div class="table-actions" style="justify-content: flex-end;">
+                        <button class="btn btn-secondary btn-sm" style="padding: 8px 12px; min-height: 36px;" onclick="editarViagemModal({{ viagem.id }}, {{ viagem.caminhao_id }}, '{{ viagem.origem }}', '{{ viagem.destino }}', '{{ viagem.data.strftime('%Y-%m-%d') }}', {{ viagem.valor_frete }}, {{ viagem.custo_combustivel }}, {{ viagem.custo_pedagio }}, {{ viagem.outros_custos }}, '{{ viagem.pago }}', '{{ viagem.observacoes or '' }}')">
+                            ✏️
+                        </button>
+                        <a href="{{ url_for('deletar_viagem', id=viagem.id) }}" class="btn btn-danger btn-sm" style="padding: 8px 12px; min-height: 36px;" onclick="return confirm('Tem certeza que deseja excluir esta viagem?')">
+                            🗑️
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div style="text-align: center; padding: 60px 20px; border: 2px dashed var(--border); border-radius: var(--radius-lg); background-color: var(--bg-card);">
+    <svg xmlns="http://www.w3.org/2000/svg" style="width: 80px; height: 80px; color: var(--text-muted); margin-bottom: 15px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+    </svg>
+    <h2 style="font-size: 22px; color: var(--text-main); margin-bottom: 8px;">Nenhuma viagem registrada</h2>
+    <p style="color: var(--text-muted); margin-bottom: 20px; max-width: 400px; margin-left: auto; margin-right: auto;">
+        Registre sua primeira rota para controlar receitas de frete, despesas de combustível e pedágios.
+    </p>
+    <button class="btn btn-primary" data-open-modal="modal-viagem-geral">
+        Registrar Minha Primeira Viagem
+    </button>
+</div>
+{% endif %}
+
+
+<!-- ==========================================
+     MODAL DE CADASTRO DE NOVA VIAGEM
+     ========================================== -->
+<div class="modal-backdrop" id="modal-viagem-geral">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2 style="font-size: 22px;">Registrar Nova Viagem</h2>
+            <button class="modal-close">&times;</button>
+        </div>
+        
+        <form action="{{ url_for('viagens') }}" method="POST">
+            <div class="modal-body">
+                {% if not caminhoes %}
+                <div style="padding: 20px; background-color: var(--danger-light); color: var(--danger); border-radius: var(--radius-md); font-weight: 700; text-align: center;">
+                    ⚠️ Você precisa cadastrar pelo menos um caminhão antes de registrar uma viagem!
+                    <br><br>
+                    <a href="{{ url_for('caminhoes') }}" class="btn btn-danger btn-sm">Cadastrar Caminhão Agora</a>
+                </div>
+                {% else %}
+                
+                <div class="form-group">
+                    <label class="form-label" for="caminhao_id">Selecione o Caminhão *</label>
+                    <select class="form-control" name="caminhao_id" id="caminhao_id" required>
+                        {% for caminhao in caminhoes %}
+                        <option value="{{ caminhao.id }}">{{ caminhao.placa }} - {{ caminhao.modelo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="origem">Cidade de Origem *</label>
+                        <input type="text" class="form-control" name="origem" id="origem" placeholder="Ex: São Paulo - SP" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="destino">Cidade de Destino *</label>
+                        <input type="text" class="form-control" name="destino" id="destino" placeholder="Ex: Rio de Janeiro - RJ" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="data">Data de Partida *</label>
+                        <input type="date" class="form-control" name="data" id="data" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="pago">Status do Pagamento</label>
+                        <select class="form-control" name="pago" id="pago">
+                            <option value="False">Pendente (A receber)</option>
+                            <option value="True">Pago (Recebido)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+                <h3 style="font-size: 18px; margin-bottom: 1rem; color: var(--primary);">Valores Financeiros (R$)</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="valor_frete">Valor do Frete Bruto *</label>
+                        <input type="number" step="0.01" class="form-control" name="valor_frete" id="valor_frete" placeholder="0,00" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="custo_combustivel">Gasto com Diesel</label>
+                        <input type="number" step="0.01" class="form-control" name="custo_combustivel" id="custo_combustivel" placeholder="0,00">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="custo_pedagio">Gasto com Pedágio</label>
+                        <input type="number" step="0.01" class="form-control" name="custo_pedagio" id="custo_pedagio" placeholder="0,00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="outros_custos">Outras Despesas</label>
+                        <input type="number" step="0.01" class="form-control" name="outros_custos" id="outros_custos" placeholder="0,00">
+                    </div>
+                </div>
+
+                <!-- PREVIEW DE LUCRO EM TEMPO REAL -->
+                <div class="lucro-preview-box">
+                    <span>LUCRO LÍQUIDO SIMULADO:</span>
+                    <span id="lucro_preview_valor">R$ 0,00</span>
+                </div>
+                
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label class="form-label" for="observacoes">Observações de Viagem (Opcional)</label>
+                    <textarea class="form-control" name="observacoes" id="observacoes" rows="2" placeholder="Ex: Carga frágil, motorista terceirizado, detalhes de descarga..."></textarea>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-close-modal>Cancelar</button>
+                {% if caminhoes %}
+                <button type="submit" class="btn btn-primary btn-sm">Registrar Viagem</button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ==========================================
+     MODAL DE EDIÇÃO DE VIAGEM
+     ========================================== -->
+<div class="modal-backdrop" id="modal-editar-viagem">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2 style="font-size: 22px;">Editar Viagem</h2>
+            <button class="modal-close">&times;</button>
+        </div>
+        
+        <form id="form-editar-viagem" action="" method="POST">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="edit_caminhao_id">Selecione o Caminhão *</label>
+                    <select class="form-control" name="caminhao_id" id="edit_caminhao_id" required>
+                        {% for caminhao in caminhoes %}
+                        <option value="{{ caminhao.id }}">{{ caminhao.placa }} - {{ caminhao.modelo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="edit_origem">Cidade de Origem *</label>
+                        <input type="text" class="form-control" name="origem" id="edit_origem" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_destino">Cidade de Destino *</label>
+                        <input type="text" class="form-control" name="destino" id="edit_destino" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="edit_data">Data de Partida *</label>
+                        <input type="date" class="form-control" name="data" id="edit_data" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_pago">Status do Pagamento</label>
+                        <select class="form-control" name="pago" id="edit_pago">
+                            <option value="False">Pendente (A receber)</option>
+                            <option value="True">Pago (Recebido)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+                <h3 style="font-size: 18px; margin-bottom: 1rem; color: var(--primary);">Valores Financeiros (R$)</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="edit_valor_frete">Valor do Frete Bruto *</label>
+                        <input type="number" step="0.01" class="form-control" name="valor_frete" id="edit_valor_frete" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_custo_combustivel">Gasto com Diesel</label>
+                        <input type="number" step="0.01" class="form-control" name="custo_combustivel" id="edit_custo_combustivel">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="edit_custo_pedagio">Gasto com Pedágio</label>
+                        <input type="number" step="0.01" class="form-control" name="custo_pedagio" id="edit_custo_pedagio">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_outros_custos">Outras Despesas</label>
+                        <input type="number" step="0.01" class="form-control" name="outros_custos" id="edit_outros_custos">
+                    </div>
+                </div>
+
+                <!-- PREVIEW DE LUCRO EM TEMPO REAL NO EDIT -->
+                <div class="lucro-preview-box">
+                    <span>LUCRO LÍQUIDO SIMULADO:</span>
+                    <span id="lucro_preview_valor_edit">R$ 0,00</span>
+                </div>
+                
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label class="form-label" for="edit_observacoes">Observações de Viagem (Opcional)</label>
+                    <textarea class="form-control" name="observacoes" id="edit_observacoes" rows="2"></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-close-modal>Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm">Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Autofill da data de hoje no formulário de cadastro
+    document.getElementById('data').value = new Date().toISOString().substring(0, 10);
+
+    // Função JS para filtrar viagens instantaneamente no browser (sem recarregar página!)
+    function filtrarViagens(filtro, botao) {
+        // Altera estados dos botões de filtro
+        const botoes = botao.parentElement.querySelectorAll('button');
+        botoes.forEach(b => {
+            b.style.backgroundColor = 'var(--border)';
+            b.style.color = 'var(--text-main)';
+        });
+        
+        botao.style.backgroundColor = 'var(--primary)';
+        botao.style.color = '#fff';
+
+        const linhas = document.querySelectorAll('#tabela-viagens tbody tr');
+        linhas.forEach(linha => {
+            const statusPago = linha.getAttribute('data-pago');
+            if (filtro === 'todas') {
+                linha.style.display = '';
+            } else if (filtro === 'pagas' && statusPago === 'pago') {
+                linha.style.display = '';
+            } else if (filtro === 'pendentes' && statusPago === 'pendente') {
+                linha.style.display = '';
+            } else {
+                linha.style.display = 'none';
+            }
+        });
+    }
+
+    // Abre o modal de edição de viagem pré-preenchido
+    function editarViagemModal(id, caminhaoId, origem, destino, data, frete, combustivel, pedagio, outros, pago, observacoes) {
+        const form = document.getElementById('form-editar-viagem');
+        form.action = `/viagens/editar/${id}`;
+        
+        abrirModalEdicao('modal-editar-viagem', {
+            caminhao_id: caminhaoId,
+            origem: origem,
+            destino: destino,
+            data: data,
+            valor_frete: frete,
+            custo_combustivel: combustivel,
+            custo_pedagio: pedagio,
+            outros_custos: outros,
+            pago: pago,
+            observacoes: observacoes
+        });
+
+        // Configura a escuta no modal de edição também para atualizar o lucro simulado em tempo real
+        const inputFrete = document.getElementById('edit_valor_frete');
+        const inputCombustivel = document.getElementById('edit_custo_combustivel');
+        const inputPedagio = document.getElementById('edit_custo_pedagio');
+        const inputOutros = document.getElementById('edit_outros_custos');
+        const boxLucro = document.getElementById('lucro_preview_valor_edit');
+
+        const inputs = [inputFrete, inputCombustivel, inputPedagio, inputOutros];
+
+        function calcularEdit() {
+            const freteVal = parseFloat(inputFrete.value) || 0;
+            const combustivelVal = parseFloat(inputCombustivel.value) || 0;
+            const pedagioVal = parseFloat(inputPedagio.value) || 0;
+            const outrosVal = parseFloat(inputOutros.value) || 0;
+
+            const lucroVal = freteVal - (combustivelVal + pedagioVal + outrosVal);
+            boxLucro.textContent = lucroVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            const container = boxLucro.closest('.lucro-preview-box');
+            if (container) {
+                if (lucroVal < 0) {
+                    container.style.backgroundColor = 'var(--danger-light)';
+                    container.style.color = 'var(--danger)';
+                    container.style.borderColor = 'var(--danger)';
+                } else {
+                    container.style.backgroundColor = 'var(--success-light)';
+                    container.style.color = 'var(--success)';
+                    container.style.borderColor = 'var(--success)';
+                }
+            }
+        }
+
+        inputs.forEach(inpt => {
+            if (inpt) inpt.addEventListener('input', calcularEdit);
+        });
+
+        // Chama cálculo na abertura inicial
+        calcularEdit();
+    }
+</script>
+{% endblock %}
