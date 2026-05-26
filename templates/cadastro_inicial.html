@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Acesso - RotaFácil</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .login-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100vw;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, hsl(220, 85%, 15%), hsl(220, 50%, 6%));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glow-circle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            z-index: 1;
+        }
+        .glow-circle-1 {
+            width: 400px;
+            height: 400px;
+            background-color: var(--primary);
+            top: -100px;
+            right: -100px;
+        }
+        .glow-circle-2 {
+            width: 350px;
+            height: 350px;
+            background-color: var(--warning);
+            bottom: -50px;
+            left: -100px;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 480px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+            color: #ffffff;
+            animation: cardFadeIn 0.5s ease-out;
+        }
+
+        @keyframes cardFadeIn {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .login-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .login-logo {
+            width: 58px;
+            height: 58px;
+            background: linear-gradient(135deg, var(--warning), #ea580c);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 26px;
+            box-shadow: 0 8px 20px rgba(234, 88, 12, 0.4);
+        }
+
+        .login-input {
+            background-color: rgba(255, 255, 255, 0.06) !important;
+            border: 2px solid rgba(255, 255, 255, 0.15) !important;
+            color: #ffffff !important;
+        }
+
+        .login-input:focus {
+            border-color: var(--warning) !important;
+            box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.25) !important;
+        }
+
+        .login-label {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+    </style>
+</head>
+<body style="margin: 0; background-color: #0f172a;">
+
+    <div class="alert-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button style="background:none; border:none; color:inherit; font-size:20px; cursor:pointer;" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="login-wrapper">
+        <div class="glow-circle glow-circle-1"></div>
+        <div class="glow-circle glow-circle-2"></div>
+        
+        <div class="login-card">
+            <div class="login-brand">
+                <div class="login-logo">⚙️</div>
+                <h1 style="font-size: 26px; font-weight: 800; margin-top: 10px; color:#ffffff;">Configuração Inicial</h1>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 15px;">Defina seu usuário e senha pessoal de administração para proteger o RotaFácil na nuvem.</p>
+            </div>
+            
+            <form action="{{ url_for('cadastro_inicial') }}" method="POST">
+                <div class="form-group">
+                    <label class="form-label login-label" for="username">Escolha seu Usuário *</label>
+                    <input type="text" class="form-control login-input" name="username" id="username" placeholder="Ex: jonat ou admin" required autocomplete="username">
+                    <span style="font-size: 12px; color: rgba(255,255,255,0.5);">Use apenas letras minúsculas ou números, sem espaços.</span>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label class="form-label login-label" for="password">Defina sua Senha Operacional *</label>
+                    <input type="password" class="form-control login-input" name="password" id="password" placeholder="Mínimo 6 caracteres" required minlength="6" autocomplete="new-password">
+                    <span style="font-size: 12px; color: rgba(255,255,255,0.5);">Esta senha protegerá 100% dos seus dados financeiros.</span>
+                </div>
+                
+                <button type="submit" class="btn" style="width: 100%; height: 52px; font-size: 19px; background-color: var(--warning); color: #fff; box-shadow: 0 8px 20px rgba(234, 88, 12, 0.35);">
+                    Salvar Perfil e Entrar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

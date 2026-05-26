@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar - RotaFácil</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Estilos específicos e refinados de login para um efeito Glassmorphism impecável */
+        .login-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100vw;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, hsl(220, 85%, 20%), hsl(220, 50%, 8%));
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Círculos de luz de fundo decorativos de alta qualidade */
+        .glow-circle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.18;
+            z-index: 1;
+        }
+        .glow-circle-1 {
+            width: 400px;
+            height: 400px;
+            background-color: var(--primary);
+            top: -100px;
+            right: -100px;
+        }
+        .glow-circle-2 {
+            width: 350px;
+            height: 350px;
+            background-color: var(--success);
+            bottom: -50px;
+            left: -100px;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 450px;
+            padding: 3rem 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+            color: #ffffff;
+            animation: cardFadeIn 0.5s ease-out;
+        }
+
+        @keyframes cardFadeIn {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .login-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+        .login-logo {
+            width: 58px;
+            height: 58px;
+            background: linear-gradient(135deg, var(--primary), #4f46e5);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 26px;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+        }
+
+        .login-input {
+            background-color: rgba(255, 255, 255, 0.06) !important;
+            border: 2px solid rgba(255, 255, 255, 0.15) !important;
+            color: #ffffff !important;
+        }
+
+        .login-input:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25) !important;
+        }
+
+        .login-label {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body style="margin: 0; background-color: #0f172a;">
+
+    <!-- Container de Mensagens Flash -->
+    <div class="alert-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button style="background:none; border:none; color:inherit; font-size:20px; cursor:pointer;" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="login-wrapper">
+        <div class="glow-circle glow-circle-1"></div>
+        <div class="glow-circle glow-circle-2"></div>
+        
+        <div class="login-card">
+            <div class="login-brand">
+                <div class="login-logo">RF</div>
+                <h1 style="font-size: 28px; font-weight: 800; margin-top: 10px; color:#ffffff;">RotaFácil</h1>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 15px;">Sistema de Gestão e Controle Financeiro</p>
+            </div>
+            
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="form-group">
+                    <label class="form-label login-label" for="username">Nome de Usuário</label>
+                    <input type="text" class="form-control login-input" name="username" id="username" placeholder="Digite seu usuário" required autocomplete="username">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label class="form-label login-label" for="password">Senha Operacional</label>
+                    <input type="password" class="form-control login-input" name="password" id="password" placeholder="Digite sua senha" required autocomplete="current-password">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; height: 52px; font-size: 19px;">
+                    Entrar no Sistema
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
