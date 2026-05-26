@@ -108,8 +108,11 @@ textarea:focus-visible {
 
 .app-container {
     display: flex;
+    flex-direction: row;
     min-height: 100vh;
-    width: 100vw;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 /* Barra Lateral (Desktop) */
@@ -695,12 +698,15 @@ textarea:focus-visible {
 /* Dispositivos Móveis e Tablets Pequenos (< 992px) */
 @media (max-width: 992px) {
     .sidebar {
-        display: none; /* Esconde a sidebar no celular */
+        display: none !important; /* Garante que esconde a sidebar no celular */
     }
     
     .main-content {
-        margin-left: 0; /* Ocupa a tela inteira */
-        padding: 1.5rem 1rem calc(var(--bottom-bar-height) + 1.5rem) 1rem; /* Espaço para a barra inferior */
+        margin-left: 0 !important; /* Ocupa a tela inteira */
+        padding: 1rem 0.75rem calc(var(--bottom-bar-height) + 1.25rem) 0.75rem !important; /* Espaçamento ajustado */
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
     }
     
     /* Barra inferior estilo app nativo */
@@ -711,7 +717,7 @@ textarea:focus-visible {
         position: fixed;
         bottom: 0;
         left: 0;
-        width: 100vw;
+        width: 100% !important; /* Alterado de 100vw para 100% para evitar barra de rolagem horizontal */
         height: var(--bottom-bar-height);
         background-color: var(--bg-card);
         border-top: 2px solid var(--border);
@@ -728,8 +734,8 @@ textarea:focus-visible {
         text-decoration: none;
         flex-grow: 1;
         height: 100%;
-        gap: 4px;
-        font-size: 12px;
+        gap: 2px;
+        font-size: 11px !important; /* Fonte menor para caber em telas estreitas */
         font-weight: 700;
     }
     
@@ -738,8 +744,8 @@ textarea:focus-visible {
     }
     
     .bottom-bar-item svg {
-        width: 24px;
-        height: 24px;
+        width: 22px !important; /* Ícone levemente menor no celular */
+        height: 22px !important;
         stroke-width: 2.2px;
     }
     
@@ -748,18 +754,46 @@ textarea:focus-visible {
     }
     
     .dashboard-row {
-        grid-template-columns: 1fr; /* Coluna única no celular */
+        grid-template-columns: 1fr !important; /* Coluna única no celular */
+        gap: 1.25rem;
     }
     
     .page-title {
-        font-size: 26px;
+        font-size: 24px !important;
     }
     
     .card-value {
-        font-size: 28px;
+        font-size: 26px !important;
+    }
+    
+    .card-grid {
+        grid-template-columns: 1fr !important; /* Força os cards de métricas em uma única coluna */
+        gap: 1rem !important;
+    }
+    
+    .info-card {
+        padding: 1.25rem !important; /* Reduz espaçamento do card para economizar tela */
     }
 
-    /* Transformar Tabelas para Mobile se preferível, mas a rolagem lateral (.table-responsive) já resolve elegantemente. */
+    .form-row {
+        grid-template-columns: 1fr !important; /* Stack vertical para campos de formulário no mobile */
+        gap: 0.5rem !important;
+    }
+    
+    .btn {
+        width: 100% !important; /* Botões ocupam largura total no celular para fácil clique */
+        font-size: 17px !important;
+    }
+}
+
+/* Telas Extremamente Pequenas (Celulares < 360px de largura) */
+@media (max-width: 360px) {
+    .card-value {
+        font-size: 22px !important;
+    }
+    .bottom-bar-item {
+        font-size: 10px !important;
+    }
 }
 
 /* Computador / Telas Grandes */
