@@ -3,6 +3,28 @@
 {% block title %}Relatório Financeiro{% endblock %}
 
 {% block content %}
+<!-- CABEÇALHO EXCLUSIVO PARA IMPRESSÃO (Oculto na tela do PC/Celular) -->
+<div class="print-header" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px double #000000; padding-bottom: 12px; margin-bottom: 25px;">
+        <div>
+            <h1 style="font-size: 26px; font-weight: 800; text-transform: uppercase; margin: 0; color: #000000; letter-spacing: -0.5px;">
+                ROTAFÁCIL - FECHAMENTO OPERACIONAL
+            </h1>
+            <p style="font-size: 14px; color: #555555; margin: 5px 0 0 0; font-weight: 600;">
+                JG-Frotas &bull; Controle de Faturamento e Frota
+            </p>
+        </div>
+        <div style="text-align: right;">
+            <p style="font-size: 13px; font-weight: 700; margin: 0; color: #000000;">
+                Emissão: <span id="print-date"></span>
+            </p>
+            <p style="font-size: 12px; color: #555555; margin: 3px 0 0 0; font-weight: 500;">
+                Status do Caixa: Consolidado
+            </p>
+        </div>
+    </div>
+</div>
+
 <div class="page-header">
     <div>
         <h1 class="page-title">Relatório Financeiro Geral</h1>
@@ -106,6 +128,68 @@
         </div>
         {% endif %}
     </div>
+
+    <!-- TABELA DETALHADA DE COMPOSIÇÃO DE CUSTOS (Exclusiva para Impressão física ou PDF - Economiza tinta e imprime limpo) -->
+    <div class="dashboard-card print-costs-table" style="display: none; padding: 2rem;">
+        <h2 style="font-size: 20px; border-bottom: 2px solid #000000; padding-bottom: 8px; margin-bottom: 15px; color: #000000; text-transform: uppercase;">
+            Distribuição de Custos
+        </h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid #000000; font-weight: 700; font-size: 13px;">
+                    <th style="padding: 8px 0; text-align: left;">Categoria de Despesa</th>
+                    <th style="padding: 8px 0; text-align: right;">Valor Pago (R$)</th>
+                    <th style="padding: 8px 0; text-align: right;">Representação</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom: 1px solid #eeeeee; font-size: 13px;">
+                    <td style="padding: 8px 0;">1. Combustível (Diesel)</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 700;">
+                        R$ {{ "{:,.2f}".format(diesel_total).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                    </td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600;">
+                        {% if despesas_totais > 0 %}{{ "{:0.1f}%".format((diesel_total / despesas_totais) * 100) }}{% else %}0,0%{% endif %}
+                    </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eeeeee; font-size: 13px;">
+                    <td style="padding: 8px 0;">2. Pedágios de Rota</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 700;">
+                        R$ {{ "{:,.2f}".format(pedagio_total).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                    </td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600;">
+                        {% if despesas_totais > 0 %}{{ "{:0.1f}%".format((pedagio_total / despesas_totais) * 100) }}{% else %}0,0%{% endif %}
+                    </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eeeeee; font-size: 13px;">
+                    <td style="padding: 8px 0;">3. Outras Despesas de Viagem</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 700;">
+                        R$ {{ "{:,.2f}".format(outros_viagens_total).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                    </td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600;">
+                        {% if despesas_totais > 0 %}{{ "{:0.1f}%".format((outros_viagens_total / despesas_totais) * 100) }}{% else %}0,0%{% endif %}
+                    </td>
+                </tr>
+                <tr style="border-bottom: 2px solid #000000; font-size: 13px;">
+                    <td style="padding: 8px 0;">4. Oficina / Manutenção Mecânica</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 700;">
+                        R$ {{ "{:,.2f}".format(manutencao_total).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                    </td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600;">
+                        {% if despesas_totais > 0 %}{{ "{:0.1f}%".format((manutencao_total / despesas_totais) * 100) }}{% else %}0,0%{% endif %}
+                    </td>
+                </tr>
+                <tr style="font-weight: 800; font-size: 14px;">
+                    <td style="padding: 10px 0;">TOTAL DESPESAS PAGAS</td>
+                    <td style="padding: 10px 0; text-align: right;">
+                        R$ {{ "{:,.2f}".format(despesas_totais).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                    </td>
+                    <td style="padding: 10px 0; text-align: right;">100,0%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
 </div>
 
 <!-- LUCRO DETALHADO POR CAMINHÃO (Para ver qual veículo rende mais) -->
@@ -161,41 +245,117 @@
     </div>
 </div>
 
+<!-- BLOCO DE ASSINATURAS EXCLUSIVO PARA IMPRESSÃO -->
+<div class="print-footer" style="display: none; margin-top: 50px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1.5px solid #dddddd; padding-top: 25px;">
+        <div style="text-align: center; width: 45%;">
+            <p style="margin: 0 0 5px 0; font-size: 13px; font-weight: 700; color:#000000;">Emitido por:</p>
+            <div style="border-top: 1.5px solid #000000; width: 100%; margin-top: 35px;"></div>
+            <p style="margin: 5px 0 0 0; font-size: 12px; color: #555555; font-weight: 600;">Jonat Girardi &bull; JG-Frotas</p>
+        </div>
+        
+        <div style="text-align: center; width: 45%;">
+            <p style="margin: 0 0 5px 0; font-size: 13px; font-weight: 700; color:#000000;">Aprovado por:</p>
+            <div style="border-top: 1.5px solid #000000; width: 100%; margin-top: 35px;"></div>
+            <p style="margin: 5px 0 0 0; font-size: 12px; color: #555555; font-weight: 600;">Assinatura do Proprietário</p>
+        </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 30px; font-size: 10px; color: #777777; border-top: 1px dashed #eeeeee; padding-top: 10px; font-weight: 500;">
+        Documento gerado eletronicamente pelo RotaFácil. Todos os direitos reservados &copy; 2026.
+    </div>
+</div>
+
 <!-- ESTILO ADICIONAL DE IMPRESSÃO (Esconde os menus ao imprimir no papel/PDF!) -->
 <style>
     @media print {
-        body {
-            background-color: #fff !important;
-            color: #000 !important;
-            font-size: 14px !important;
-        }
-        .sidebar, .bottom-bar, .btn, .page-header div:last-child {
+        /* Oculta tudo que não pertence ao papel impresso */
+        .sidebar, .bottom-bar, .btn, .page-header, #despesasPieChart, .chart-container, .dashboard-card:nth-child(3) {
             display: none !important;
         }
+        
+        /* Exibe as seções exclusivas de impressão */
+        .print-header, .print-costs-table, .print-footer {
+            display: block !important;
+        }
+        
+        body {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            font-size: 13px !important;
+            font-family: 'Outfit', 'Helvetica Neue', Arial, sans-serif !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
         .main-content {
             margin-left: 0 !important;
             padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow: visible !important;
         }
+        
         .dashboard-row {
             grid-template-columns: 1fr !important;
+            gap: 1.5rem !important;
+            margin-bottom: 2rem !important;
         }
+        
         .dashboard-card {
-            border: none !important;
+            border: 1px solid #000000 !important;
+            border-radius: 12px !important;
             box-shadow: none !important;
-            padding: 0 !important;
+            padding: 1.5rem !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            page-break-inside: avoid !important;
         }
+        
         .table-responsive {
-            border: none !important;
+            border: 1px solid #000000 !important;
             box-shadow: none !important;
+            border-radius: 12px !important;
+            page-break-inside: avoid !important;
+            width: 100% !important;
         }
+        
+        .custom-table {
+            min-width: 100% !important;
+            width: 100% !important;
+        }
+        
         .custom-table th {
             background-color: #f1f5f9 !important;
-            color: #000 !important;
+            color: #000000 !important;
+            border-bottom: 2px solid #000000 !important;
+            padding: 10px !important;
+            font-size: 12px !important;
+            font-weight: 800 !important;
         }
+        
+        .custom-table td {
+            padding: 10px !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+        }
+        
         .truck-plate-badge {
-            border: 1px solid #000 !important;
-            color: #000 !important;
-            background: none !important;
+            border: 1.5px solid #000000 !important;
+            color: #000000 !important;
+            background-color: #ffffff !important;
+            padding: 3px 8px !important;
+            font-weight: 800 !important;
+            border-radius: 6px !important;
+            font-family: monospace !important;
+        }
+        
+        .badge {
+            border: 1px solid #000000 !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            font-weight: 800 !important;
         }
     }
 </style>
@@ -204,6 +364,15 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    // Injeta a data e hora atual do computador de forma legível no cabeçalho impresso
+    document.getElementById('print-date').textContent = new Date().toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
     {% if despesas_totais > 0 %}
     // Gráfico de Pizza (Composition of Expenses)
     const ctxPie = document.getElementById('despesasPieChart').getContext('2d');
