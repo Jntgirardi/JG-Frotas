@@ -1044,3 +1044,71 @@ textarea:focus-visible {
         font-weight: 800 !important;
     }
 }
+
+/* ==========================================
+   LOADING OVERLAY & SPINNER (PREMIUM UX)
+   ========================================== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 999999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.loading-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.loading-spinner-container {
+    text-align: center;
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border, #cbd5e1);
+    padding: 2.5rem 3.5rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 90%;
+    width: 400px;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid var(--border, #cbd5e1);
+    border-top: 5px solid var(--primary, #2563eb);
+    border-radius: 50%;
+    animation: loading-spin 1s linear infinite;
+    margin-bottom: 1.25rem;
+}
+
+.loading-text {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-main, #0f172a);
+    margin-bottom: 0.5rem;
+}
+
+.loading-subtext {
+    font-size: 13px;
+    color: var(--text-muted, #64748b);
+    margin: 0;
+}
+
+@keyframes loading-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

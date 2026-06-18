@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     inicializarModais();
     configurarAutoFechamentoAlertas();
     configurarFormatacaoInputs();
+    configurarLoadingOverlay();
 });
 
 /**
@@ -19,9 +20,12 @@ function inicializarCalculoLucro() {
     const inputCombustivel = document.getElementById('custo_combustivel');
     const inputPedagio = document.getElementById('custo_pedagio');
     const inputOutros = document.getElementById('outros_custos');
+    const inputComissao = document.getElementById('comissao_motorista');
+    const inputPrestacao = document.getElementById('prestacao');
+    const inputImpostos = document.getElementById('impostos');
     const boxLucro = document.getElementById('lucro_preview_valor');
 
-    const inputs = [inputFrete, inputCombustivel, inputPedagio, inputOutros];
+    const inputs = [inputFrete, inputCombustivel, inputPedagio, inputOutros, inputComissao, inputPrestacao, inputImpostos];
 
     // Se algum dos elementos não existir na página, cancela execução da função
     if (!inputFrete || !boxLucro) return;
@@ -31,8 +35,11 @@ function inicializarCalculoLucro() {
         const combustivel = parseFloat(inputCombustivel.value) || 0;
         const pedagio = parseFloat(inputPedagio.value) || 0;
         const outros = parseFloat(inputOutros.value) || 0;
+        const comissao = parseFloat(inputComissao.value) || 0;
+        const prestacao = parseFloat(inputPrestacao.value) || 0;
+        const impostos = parseFloat(inputImpostos.value) || 0;
 
-        const lucro = frete - (combustivel + pedagio + outros);
+        const lucro = frete - (combustivel + pedagio + outros + comissao + prestacao + impostos);
 
         // Formatação em Real (R$)
         boxLucro.textContent = lucro.toLocaleString('pt-BR', {
@@ -179,4 +186,46 @@ function abrirModalEdicao(modalId, dados) {
         const event = new Event('input');
         inputFrete.dispatchEvent(event);
     }
+}
+
+/**
+ * Controla a exibição do overlay de carregamento em cliques de links e submissões de formulário
+ */
+function configurarLoadingOverlay() {
+    // Intercepta submits de formulários
+    document.addEventListener('submit', (e) => {
+        const form = e.target;
+        if (form.getAttribute('target') === '_blank') return;
+        
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.classList.add('show');
+        }
+    });
+
+    // Intercepta cliques em links de navegação
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (link) {
+            const href = link.getAttribute('href');
+            const target = link.getAttribute('target');
+            
+            // Ignora links sem destino, hashes/âncoras, javascript triggers, links para modais ou nova aba
+            if (!href || 
+                href.startsWith('#') || 
+                href.startsWith('javascript:') || 
+                target === '_blank' ||
+                link.hasAttribute('data-open-modal') ||
+                link.hasAttribute('data-close-modal') ||
+                link.classList.contains('modal-close')
+            ) {
+                return;
+            }
+            
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.classList.add('show');
+            }
+        }
+    });
 }
