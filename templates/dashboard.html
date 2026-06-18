@@ -15,9 +15,7 @@
             ✨ Preencher com Dados de Exemplo
         </a>
         {% endif %}
-        <button class="btn btn-primary" data-open-modal="modal-viagem">
-            ➕ Registrar Viagem
-        </button>
+
     </div>
 </div>
 
@@ -267,121 +265,7 @@
 </div>
 
 <!-- ==========================================
-     MODAL DE CADASTRO DE NOVA VIAGEM
-     ========================================== -->
-<div class="modal-backdrop" id="modal-viagem">
-    <div class="modal-container">
-        <div class="modal-header">
-            <h2 style="font-size: 22px;">Registrar Nova Viagem</h2>
-            <button class="modal-close">&times;</button>
-        </div>
-        
-        <form action="{{ url_for('viagens') }}" method="POST">
-            <div class="modal-body">
-                {% if not caminhoes %}
-                <div style="padding: 20px; background-color: var(--danger-light); color: var(--danger); border-radius: var(--radius-md); font-weight: 700; text-align: center;">
-                    ⚠️ Você precisa cadastrar pelo menos um caminhão antes de registrar uma viagem!
-                    <br><br>
-                    <a href="{{ url_for('caminhoes') }}" class="btn btn-danger btn-sm">Cadastrar Caminhão Agora</a>
-                </div>
-                {% else %}
-                
-                <div class="form-group">
-                    <label class="form-label" for="caminhao_id">Selecione o Caminhão *</label>
-                    <select class="form-control" name="caminhao_id" id="caminhao_id" required>
-                        {% for caminhao in caminhoes %}
-                        <option value="{{ caminhao.id }}">{{ caminhao.placa }} - {{ caminhao.modelo }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="origem">Cidade de Origem *</label>
-                        <input type="text" class="form-control" name="origem" id="origem" placeholder="Ex: São Paulo - SP" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="destino">Cidade de Destino *</label>
-                        <input type="text" class="form-control" name="destino" id="destino" placeholder="Ex: Rio de Janeiro - RJ" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="data">Data de Partida *</label>
-                        <input type="date" class="form-control" name="data" id="data" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="pago">Status do Pagamento</label>
-                        <select class="form-control" name="pago" id="pago">
-                            <option value="False">Pendente (A receber)</option>
-                            <option value="True">Pago (Recebido)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
-                <h3 style="font-size: 18px; margin-bottom: 1rem; color: var(--primary);">Valores Financeiros (R$)</h3>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="valor_frete">Valor do Frete Bruto *</label>
-                        <input type="number" step="0.01" class="form-control" name="valor_frete" id="valor_frete" placeholder="0,00" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="custo_combustivel">Gasto com Diesel</label>
-                        <input type="number" step="0.01" class="form-control" name="custo_combustivel" id="custo_combustivel" placeholder="0,00">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="custo_pedagio">Gasto com Pedágio</label>
-                        <input type="number" step="0.01" class="form-control" name="custo_pedagio" id="custo_pedagio" placeholder="0,00">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="outros_custos">Outras Despesas</label>
-                        <input type="number" step="0.01" class="form-control" name="outros_custos" id="outros_custos" placeholder="0,00">
-                    </div>
-                </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="comissao_motorista">Comissão do Motorista</label>
-                        <input type="number" step="0.01" class="form-control" name="comissao_motorista" id="comissao_motorista" placeholder="0,00">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="prestacao">Prestação do Veículo</label>
-                        <input type="number" step="0.01" class="form-control" name="prestacao" id="prestacao" placeholder="0,00">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="impostos">Impostos</label>
-                        <input type="number" step="0.01" class="form-control" name="impostos" id="impostos" placeholder="0,00">
-                    </div>
-                </div>
-
-                <!-- PREVIEW DE LUCRO EM TEMPO REAL -->
-                <div class="lucro-preview-box">
-                    <span>LUCRO LÍQUIDO SIMULADO:</span>
-                    <span id="lucro_preview_valor">R$ 0,00</span>
-                </div>
-                
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label class="form-label" for="observacoes">Observações de Viagem (Opcional)</label>
-                    <textarea class="form-control" name="observacoes" id="observacoes" rows="2" placeholder="Ex: Carga frágil, motorista terceirizado, detalhes de descarga..."></textarea>
-                </div>
-                {% endif %}
-            </div>
-            
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-close-modal>Cancelar</button>
-                {% if caminhoes %}
-                <button type="submit" class="btn btn-primary btn-sm">Registrar Viagem</button>
-                {% endif %}
-            </div>
-        </form>
-    </div>
-</div>
 
 <!-- ==========================================
      MODAL DE EDIÇÃO DE VIAGEM
@@ -497,59 +381,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // Autofill do input date do modal de cadastro com a data de hoje
-        const dataInput = document.getElementById('data');
-        if (dataInput) {
-            dataInput.value = new Date().toISOString().substring(0, 10);
-        }
 
-        // --- CÁLCULO E AUTOMATIZAÇÃO DO CADASTRO ---
-        const valFrete = document.getElementById('valor_frete');
-        const valDiesel = document.getElementById('custo_combustivel');
-        const valPedagio = document.getElementById('custo_pedagio');
-        const valOutros = document.getElementById('outros_custos');
-        const valComissao = document.getElementById('comissao_motorista');
-        const valPrestacao = document.getElementById('prestacao');
-        const valImpostos = document.getElementById('impostos');
-        const displayLucro = document.getElementById('lucro_preview_valor');
-
-        function calcularCadastro() {
-            const frete = parseFloat(valFrete.value) || 0;
-            const diesel = parseFloat(valDiesel.value) || 0;
-            const pedagio = parseFloat(valPedagio.value) || 0;
-            const outros = parseFloat(valOutros.value) || 0;
-            const comissao = parseFloat(valComissao.value) || 0;
-            const prestacao = parseFloat(valPrestacao.value) || 0;
-            const impostos = parseFloat(valImpostos.value) || 0;
-
-            const lucro = frete - (diesel + pedagio + outros + comissao + prestacao + impostos);
-            if (displayLucro) {
-                displayLucro.textContent = lucro.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                const box = displayLucro.closest('.lucro-preview-box');
-                if (box) {
-                    if (lucro < 0) {
-                        box.style.backgroundColor = 'var(--danger-light)';
-                        box.style.color = 'var(--danger)';
-                        box.style.borderColor = 'var(--danger)';
-                    } else {
-                        box.style.backgroundColor = 'var(--success-light)';
-                        box.style.color = 'var(--success)';
-                        box.style.borderColor = 'var(--success)';
-                    }
-                }
-            }
-        }
-
-        if (valFrete) {
-            valFrete.addEventListener('input', () => {
-                const val = parseFloat(valFrete.value) || 0;
-                if (valComissao) valComissao.value = (val * 0.12).toFixed(2);
-                if (valImpostos) valImpostos.value = (val * 0.10).toFixed(2);
-                calcularCadastro();
-            });
-            [valDiesel, valPedagio, valOutros, valComissao, valPrestacao, valImpostos].forEach(inpt => {
-                if (inpt) inpt.addEventListener('input', calcularCadastro);
-            });
-        }
 
         // --- EDIÇÃO DE VIAGENS ---
         document.querySelectorAll('.edit-viagem-btn').forEach(btn => {

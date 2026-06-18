@@ -35,6 +35,7 @@ class RotaFacilSecurityTestCase(unittest.TestCase):
         db.session.rollback()
         db.session.remove()
         db.drop_all()
+        db.engine.dispose()
         self.app_context.pop()
 
     def test_unauthenticated_redirects(self):
