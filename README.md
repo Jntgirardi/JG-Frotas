@@ -10,7 +10,8 @@ O projeto foi inteiramente estruturado seguindo os princípios de **Arquitetura 
 
 - **Painel Geral (Dashboard):** Visão consolidada de Faturamento Bruto, Despesas Totais e Lucro Líquido Real, com gráficos interativos mensais.
 - **Controle de Frota:** Cadastro de caminhões, gerenciamento e acompanhamento de status atual (Livre, Em Viagem, Oficina).
-- **Registro de Viagens & Rotas:** Lançamento de fretes, gastos operacionais de rotas (Diesel, Pedágio e Outros) e cálculo automático de margem e lucro líquido da viagem em tempo real.
+- **Gestão Contextualizada de Viagens:** O registro, a edição e a exclusão de viagens são realizados diretamente do painel de cada veículo (placa) e da tela inicial, sem uma aba global genérica. A comissão (12%) e os impostos (10%) são calculados em tempo real na interface.
+- **Tela de Carregamento Premium (UX):** Interceptação global de formulários e cliques de navegação para exibir um overlay escuro com efeito de *glassmorphism* e um spinner animado. Isso garante um visual de alta qualidade e evita que usuários leigos achem que o sistema travou.
 - **Controle Mecânico (Oficina):** Registro de despesas mecânicas com peças e manutenções, separadas por Preventivas e Corretivas.
 - **Relatório Financeiro Completo:** Balanço consolidado de fluxo de caixa, demonstrativo composto de custos operacionais e tabela detalhada de lucratividade individual por caminhão.
 - **Layout Adaptativo (Mobile/Desktop):** Barra lateral fixa intuitiva no computador e barra de navegação inferior estilo aplicativo móvel nativo no celular (com alvos de toque generosos de no mínimo `48px`).
@@ -22,21 +23,30 @@ O projeto foi inteiramente estruturado seguindo os princípios de **Arquitetura 
 A estrutura do projeto está organizada em camadas concêntricas e desacopladas:
 
 1. **Domínio (`domain/`):** Contém as entidades puras de negócio (`Caminhao`, `Viagem`, `Manutencao`, `Usuario`) desenvolvidas em Python puro, totalmente livre de dependências externas.
-2. **Infraestrutura (`infrastructure/`):** Implementação física do banco de dados SQLite com SQLAlchemy e o padrão **Repository** (`repositories.py`) para isolamento total do acesso a dados (SQL).
+2. **Infraestrutura (`infrastructure/`):** Implementação física do banco de dados (SQLite/PostgreSQL) com SQLAlchemy e o padrão **Repository** (`repositories.py`) para isolamento total do acesso a dados.
 3. **Aplicação (`application/`):** Contém os casos de uso e serviços orquestradores de fluxo (`AuthService`, `FleetService`, `TripService`, `FinanceService`).
 4. **Apresentação (`app.py` & `templates/`):** Controlador web fino em Flask, segurança de sessões de cookies criptografadas e Views responsivas em HTML5, CSS Vanilla e Javascript Vanilla.
 
 ---
 
-## 🔒 Segurança de Acesso
+## 🔒 Segurança & DevSecOps
 
-Para proteger os dados ao subir o sistema para a internet, implementamos uma política de segurança robusta:
+Para proteger os dados e garantir a estabilidade do sistema ao implantar em nuvem, o **RotaFácil** possui:
 
 1. **Criptografia de Senhas:** Todas as senhas operacionais são criptografadas antes de serem salvas utilizando o algoritmo seguro SHA-256 via `werkzeug.security`.
 2. **Políticas de Sessão Segura:** As rotas financeiras e de frota são 100% protegidas por interceptores e cookies criptografados com Secret Keys.
 3. **Ausência de Credenciais Padronizadas (Zero Default Passwords):**
    - Ao iniciar o sistema com um banco de dados vazio (em produção), o **RotaFácil** detecta automaticamente a ausência de administradores e exibe a tela de **Cadastro de Configuração Inicial** no primeiro acesso.
-   - Isso permite que você defina suas próprias credenciais personalizadas de forma 100% segura diretamente no ar, sem expor nenhuma senha padrão no código público do GitHub.
+4. **Proteção de Rotas & Validação:** Todos os acessos não autenticados a páginas internas são bloqueados, com tratamento de exceções para parâmetros inválidos e restrições rígidas no banco (ex: placas de caminhão duplicadas).
+
+---
+
+## 🧪 Testes Automatizados & CI/CD
+
+O projeto conta com testes automatizados integrados a uma esteira de entrega contínua:
+
+- **Suíte de Testes (Python `unittest`):** Valida a segurança das rotas (bloqueio de usuários anônimos), integridade dos dados (unicidade de placa), regras de cálculo de comissão/imposto de viagens e redirecionamento seguro para parâmetros inválidos.
+- **GitHub Actions (CI):** Pipeline configurado em `.github/workflows/ci.yml` que roda automaticamente toda a suíte de testes em cada push ou pull request na branch principal `main`.
 
 ---
 
@@ -44,6 +54,7 @@ Para proteger os dados ao subir o sistema para a internet, implementamos uma pol
 
 ### Pré-requisitos
 - Python 3.10 ou superior instalado.
+- Banco SQLite local ou PostgreSQL (compatível com Supabase).
 
 ### Passo a Passo
 
@@ -64,7 +75,7 @@ Para proteger os dados ao subir o sistema para a internet, implementamos uma pol
 
 3. **Instalar as Dependências:**
    ```bash
-   pip install flask flask-sqlalchemy
+   pip install -r requirements.txt
    ```
 
 4. **Inicializar o Banco e Dados de Demonstração (Sandbox Local):**
@@ -74,7 +85,12 @@ Para proteger os dados ao subir o sistema para a internet, implementamos uma pol
    ```
    *(Este script gera uma conta local padrão: Usuário: `admin` / Senha: `admin123` apenas para testes em máquina local).*
 
-5. **Iniciar o Servidor:**
+5. **Executar a Suíte de Testes:**
+   ```bash
+   python -m unittest discover -s tests
+   ```
+
+6. **Iniciar o Servidor:**
    ```bash
    python app.py
    ```
