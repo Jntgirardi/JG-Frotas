@@ -14,8 +14,9 @@ app.config.from_object(Config)
 # Inicializa o SQLAlchemy
 db.init_app(app)
 
-with app.app_context():
-    db.create_all()
+if os.environ.get('TESTING') != 'true':
+    with app.app_context():
+        db.create_all()
 
 # Instanciação dos Serviços da Camada de Aplicação
 auth_service = AuthService()
@@ -455,8 +456,8 @@ def inicializar_dados():
     db.drop_all()
     db.create_all()
 
-    # 1. Cria usuário padrão admin/admin123 criptografado para o primeiro acesso
-    auth_service.register('admin', 'admin123')
+    # 1. Cria usuário padrão jc_admin/jc_admin123 criptografado para o primeiro acesso
+    auth_service.register('jc_admin', 'jc_admin123')
 
     # 2. Cria 3 caminhões de teste
     c1 = fleet_service.register_truck('BRA2E19', 'Volvo FH 540 Globetrotter', 2021, 'Branco', 'Em Viagem', motorista='Carlos Souza')
@@ -543,7 +544,7 @@ def inicializar_dados():
         oficina='Freios Paranaense'
     )
 
-    flash('Banco de dados reconfigurado! Perfil criado: Usuário: admin | Senha: admin123', 'success')
+    flash('Banco de dados reconfigurado! Perfil criado: Usuário: jc_admin | Senha: jc_admin123', 'success')
     return redirect(url_for('login'))
 
 

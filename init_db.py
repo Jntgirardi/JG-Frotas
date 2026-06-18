@@ -14,8 +14,8 @@ def init_database():
         print("Tabelas físicas criadas com sucesso. Populando dados iniciais...")
 
         # 1. Cria usuário administrador inicial criptografado
-        print("Criando usuário admin...")
-        auth_service.register('admin', 'admin123')
+        print("Criando usuário jc_admin...")
+        auth_service.register('jc_admin', 'jc_admin123')
 
         # 2. Cria 3 Caminhões de Exemplo (Frota inicial)
         print("Criando caminhões...")
@@ -109,8 +109,8 @@ def init_database():
         print("\n" + "="*50)
         print("Banco de dados populado com sucesso sob a ARQUITETURA LIMPA!")
         print("Perfil de teste inicial criado:")
-        print("   - Usuário: admin")
-        print("   - Senha:   admin123")
+        print("   - Usuário: jc_admin")
+        print("   - Senha:   jc_admin123")
         print("="*50)
 
 if __name__ == '__main__':

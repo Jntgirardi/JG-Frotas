@@ -2,6 +2,9 @@ import unittest
 import sys
 import os
 
+# Define a variável de ambiente de teste antes de importar o app
+os.environ['TESTING'] = 'true'
+
 # Garante que a raiz do projeto esteja no path do Python
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -45,7 +48,7 @@ class RotaFacilSecurityTestCase(unittest.TestCase):
         ]
         
         # Inicializa um admin para garantir que o sistema não force cadastro inicial automático
-        self.auth_service.register('admin', 'admin123')
+        self.auth_service.register('jc_admin', 'jc_admin123')
         
         for route in protected_routes:
             with self.subTest(route=route):
@@ -61,7 +64,7 @@ class RotaFacilSecurityTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
 
         # 2. Registra o admin inicial
-        self.auth_service.register('admin', 'admin123')
+        self.auth_service.register('jc_admin', 'jc_admin123')
 
         # 3. Tenta acessar novamente: deve redirecionar para login
         res = self.client.get('/cadastro_inicial')
@@ -109,10 +112,10 @@ class RotaFacilSecurityTestCase(unittest.TestCase):
     def test_invalid_truck_id_redirect(self):
         """Verifica se acessar um ID de caminhão inválido redireciona com segurança para o Dashboard"""
         # Simular login
-        self.auth_service.register('admin', 'admin123')
+        self.auth_service.register('jc_admin', 'jc_admin123')
         with self.client.session_transaction() as sess:
             sess['user_id'] = 1
-            sess['username'] = 'admin'
+            sess['username'] = 'jc_admin'
             
         res = self.client.get('/caminhao/99999')
         self.assertEqual(res.status_code, 302)
