@@ -14,6 +14,9 @@ app.config.from_object(Config)
 # Inicializa o SQLAlchemy
 db.init_app(app)
 
+with app.app_context():
+    db.create_all()
+
 # Instanciação dos Serviços da Camada de Aplicação
 auth_service = AuthService()
 fleet_service = FleetService()
@@ -133,6 +136,7 @@ def caminhoes():
         ano = int(request.form.get('ano', datetime.now().year))
         cor = request.form.get('cor').strip()
         status = request.form.get('status', 'Disponível')
+        motorista = request.form.get('motorista', 'Não definido').strip()
 
         if not placa or not modelo:
             flash('Por favor, preencha placa e modelo.', 'warning')
@@ -144,7 +148,7 @@ def caminhoes():
             flash(f'O caminhão placa {placa} já está cadastrado!', 'danger')
             return redirect(url_for('caminhoes'))
 
-        fleet_service.register_truck(placa, modelo, ano, cor, status)
+        fleet_service.register_truck(placa, modelo, ano, cor, status, motorista)
         flash('Caminhão cadastrado com sucesso!', 'success')
         return redirect(url_for('caminhoes'))
 
@@ -160,8 +164,9 @@ def editar_caminhao(id):
     ano = int(request.form.get('ano'))
     cor = request.form.get('cor').strip()
     status = request.form.get('status')
+    motorista = request.form.get('motorista', 'Não definido').strip()
 
-    fleet_service.update_truck(id, placa, modelo, ano, cor, status)
+    fleet_service.update_truck(id, placa, modelo, ano, cor, status, motorista)
     flash('Caminhão atualizado com sucesso!', 'success')
     return redirect(url_for('caminhoes'))
 
@@ -191,6 +196,9 @@ def viagens():
         custo_combustivel = float(request.form.get('custo_combustivel', 0.0) or 0)
         custo_pedagio = float(request.form.get('custo_pedagio', 0.0) or 0)
         outros_custos = float(request.form.get('outros_custos', 0.0) or 0)
+        comissao_motorista = float(request.form.get('comissao_motorista', 0.0) or 0)
+        prestacao = float(request.form.get('prestacao', 0.0) or 0)
+        impostos = float(request.form.get('impostos', 0.0) or 0)
         pago = request.form.get('pago') == 'True'
         observacoes = request.form.get('observacoes').strip()
 
@@ -205,19 +213,16 @@ def viagens():
             custo_combustivel=custo_combustivel,
             custo_pedagio=custo_pedagio,
             outros_custos=outros_custos,
+            comissao_motorista=comissao_motorista,
+            prestacao=prestacao,
+            impostos=impostos,
             pago=pago,
             observacoes=observacoes
         )
         flash('Viagem registrada com sucesso!', 'success')
-        return redirect(url_for('viagens'))
+        return redirect(request.referrer or url_for('dashboard'))
 
-    viagens_lista = trip_service.list_trips()
-    caminhoes_lista = fleet_service.list_trucks()
-    return render_template(
-        'viagens.html',
-        viagens=viagens_lista,
-        caminhoes=caminhoes_lista
-    )
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/viagens/editar/<int:id>', methods=['POST'])
@@ -231,6 +236,9 @@ def editar_viagem(id):
     custo_combustivel = float(request.form.get('custo_combustivel', 0.0) or 0)
     custo_pedagio = float(request.form.get('custo_pedagio', 0.0) or 0)
     outros_custos = float(request.form.get('outros_custos', 0.0) or 0)
+    comissao_motorista = float(request.form.get('comissao_motorista', 0.0) or 0)
+    prestacao = float(request.form.get('prestacao', 0.0) or 0)
+    impostos = float(request.form.get('impostos', 0.0) or 0)
     pago = request.form.get('pago') == 'True'
     observacoes = request.form.get('observacoes').strip()
 
@@ -246,11 +254,14 @@ def editar_viagem(id):
         custo_combustivel=custo_combustivel,
         custo_pedagio=custo_pedagio,
         outros_custos=outros_custos,
+        comissao_motorista=comissao_motorista,
+        prestacao=prestacao,
+        impostos=impostos,
         pago=pago,
         observacoes=observacoes
     )
     flash('Registro de viagem atualizado!', 'success')
-    return redirect(url_for('viagens'))
+    return redirect(request.referrer or url_for('dashboard'))
 
 
 @app.route('/viagens/pago/<int:id>')
@@ -267,7 +278,7 @@ def alternar_pago_viagem(id):
 def deletar_viagem(id):
     trip_service.remove_trip(id)
     flash('Registro de viagem removido com sucesso!', 'success')
-    return redirect(url_for('viagens'))
+    return redirect(request.referrer or url_for('dashboard'))
 
 
 # ----------------- MANUTENÇÃO -----------------
@@ -347,6 +358,95 @@ def financeiro():
     return render_template('financeiro.html', **relatorio)
 
 
+@app.route('/caminhao/<int:id>')
+@login_required
+def detalhes_caminhao(id):
+    import calendar
+    # Recupera mes e ano da query string (GET)
+    hoje = date.today()
+    mes_str = request.args.get('mes')
+    ano_str = request.args.get('ano')
+
+    mes = int(mes_str) if (mes_str and mes_str.isdigit()) else hoje.month
+    ano = int(ano_str) if (ano_str and ano_str.isdigit()) else hoje.year
+
+    start_date = date(ano, mes, 1)
+    _, last_day = calendar.monthrange(ano, mes)
+    end_date = date(ano, mes, last_day)
+
+    # Busca os dados no FinanceService
+    dados_caminhao = finance_service.get_truck_dashboard_data(id, start_date, end_date)
+    if not dados_caminhao:
+        flash('Caminhão não encontrado!', 'danger')
+        return redirect(url_for('dashboard'))
+
+    return render_template(
+        'detalhes_caminhao.html',
+        **dados_caminhao,
+        mes_selecionado=mes,
+        ano_selecionado=ano,
+        start_date=start_date.isoformat(),
+        end_date=end_date.isoformat()
+    )
+
+
+@app.route('/caminhao/<int:id>/editar_motorista', methods=['POST'])
+@login_required
+def editar_motorista(id):
+    caminhao = fleet_service.get_truck_by_id(id)
+    if not caminhao:
+        flash('Caminhão não encontrado!', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    motorista = request.form.get('motorista', '').strip()
+    if not motorista:
+        flash('Nome do motorista não pode ser vazio!', 'warning')
+        return redirect(url_for('detalhes_caminhao', id=id))
+        
+    fleet_service.update_truck(
+        id=caminhao.id,
+        placa=caminhao.placa,
+        modelo=caminhao.modelo,
+        ano=caminhao.ano,
+        cor=caminhao.cor,
+        status=caminhao.status,
+        motorista=motorista
+    )
+    flash(f'Motorista do caminhão {caminhao.placa} atualizado para {motorista}!', 'success')
+    return redirect(url_for('detalhes_caminhao', id=id))
+
+
+@app.route('/caminhao/<int:id>/folha/<int:mes>/<int:ano>')
+@login_required
+def folha_pagamento(id, mes, ano):
+    import calendar
+    # Filtra por mes e ano
+    start_date = date(ano, mes, 1)
+    _, last_day = calendar.monthrange(ano, mes)
+    end_date = date(ano, mes, last_day)
+
+    dados_caminhao = finance_service.get_truck_dashboard_data(id, start_date, end_date)
+    if not dados_caminhao:
+        flash('Caminhão não encontrado!', 'danger')
+        return redirect(url_for('dashboard'))
+
+    meses_nomes = {
+        1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril',
+        5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto',
+        9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'
+    }
+    referencia = f"{meses_nomes[mes]} de {ano}"
+
+    return render_template(
+        'folha_pagamento.html',
+        **dados_caminhao,
+        referencia=referencia,
+        mes=mes,
+        ano=ano,
+        today_date=date.today().strftime('%d/%m/%Y')
+    )
+
+
 # ----------------- RESET / INICIALIZAR DADOS -----------------
 
 @app.route('/inicializar_dados')
@@ -359,9 +459,9 @@ def inicializar_dados():
     auth_service.register('admin', 'admin123')
 
     # 2. Cria 3 caminhões de teste
-    c1 = fleet_service.register_truck('BRA2E19', 'Volvo FH 540 Globetrotter', 2021, 'Branco', 'Em Viagem')
-    c2 = fleet_service.register_truck('BRA3F22', 'Scania R 450 Highline', 2022, 'Vermelho', 'Disponível')
-    c3 = fleet_service.register_truck('BRA4G25', 'Mercedes-Benz Actros 2651', 2020, 'Azul Escuro', 'Em Manutenção')
+    c1 = fleet_service.register_truck('BRA2E19', 'Volvo FH 540 Globetrotter', 2021, 'Branco', 'Em Viagem', motorista='Carlos Souza')
+    c2 = fleet_service.register_truck('BRA3F22', 'Scania R 450 Highline', 2022, 'Vermelho', 'Disponível', motorista='José Santos')
+    c3 = fleet_service.register_truck('BRA4G25', 'Mercedes-Benz Actros 2651', 2020, 'Azul Escuro', 'Em Manutenção', motorista='Antônio Lima')
 
     # 3. Cria viagens de teste
     v1 = trip_service.register_trip(
@@ -373,6 +473,9 @@ def inicializar_dados():
         custo_combustivel=1400.00,
         custo_pedagio=350.00,
         outros_custos=150.00,
+        comissao_motorista=300.00,
+        prestacao=500.00,
+        impostos=120.00,
         pago=True,
         observacoes='Carga de bobinas de papel. Tudo OK.'
     )
@@ -385,6 +488,9 @@ def inicializar_dados():
         custo_combustivel=1700.00,
         custo_pedagio=280.00,
         outros_custos=100.00,
+        comissao_motorista=350.00,
+        prestacao=500.00,
+        impostos=150.00,
         pago=True,
         observacoes='Carga seca, grãos. Frete rápido.'
     )
@@ -397,6 +503,9 @@ def inicializar_dados():
         custo_combustivel=2100.00,
         custo_pedagio=420.00,
         outros_custos=200.00,
+        comissao_motorista=400.00,
+        prestacao=500.00,
+        impostos=200.00,
         pago=True,
         observacoes='Minério de ferro. Pedágios caros.'
     )
@@ -409,6 +518,9 @@ def inicializar_dados():
         custo_combustivel=550.00,
         custo_pedagio=120.00,
         outros_custos=50.00,
+        comissao_motorista=150.00,
+        prestacao=300.00,
+        impostos=80.00,
         pago=False,
         observacoes='Carga fracionada expressa. Aguardando liberação.'
     )

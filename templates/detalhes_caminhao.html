@@ -1,0 +1,796 @@
+{% extends 'base.html' %}
+
+{% block title %}Painel {{ caminhao.placa }}{% endblock %}
+
+{% block content %}
+<!-- BOTÃO VOLTAR -->
+<div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">
+        ⬅️ Voltar para Início
+    </a>
+</div>
+
+<!-- CABEÇALHO DO VEÍCULO -->
+<div class="page-header" style="margin-bottom: 1.5rem;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;">
+            <h1 class="page-title" style="margin: 0; font-family: monospace;">{{ caminhao.placa }}</h1>
+            {% if caminhao.status == 'Disponível' %}
+                <span class="badge badge-primary" style="font-size: 15px;"><span class="badge-dot"></span>Livre</span>
+            {% elif caminhao.status == 'Em Viagem' %}
+                <span class="badge badge-success" style="font-size: 15px;"><span class="badge-dot"></span>Em Viagem</span>
+            {% else %}
+                <span class="badge badge-warning" style="font-size: 15px;"><span class="badge-dot"></span>Oficina</span>
+            {% endif %}
+        </div>
+        <p class="page-subtitle" style="font-size: 18px;">
+            <strong>{{ caminhao.modelo }}</strong> • {{ caminhao.cor or 'Sem Cor' }} • Ano {{ caminhao.ano }}
+        </p>
+    </div>
+</div>
+
+<!-- MOTORISTA RESPONSÁVEL (Card Informativo e Edição Inline) -->
+<div class="dashboard-card" style="margin-bottom: 1.5rem; padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; background: linear-gradient(135deg, var(--primary-light), transparent);">
+    <div style="display: flex; align-items: center; gap: 12px;" id="container-motorista-info">
+        <span style="font-size: 32px;">👤</span>
+        <div>
+            <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; margin-bottom: 2px;">Motorista Responsável</h3>
+            <span id="nome-motorista-display" style="font-size: 20px; font-weight: 800; color: var(--text-main);">{{ caminhao.motorista }}</span>
+        </div>
+    </div>
+    
+    <!-- Formulário inline para editar motorista -->
+    <form action="{{ url_for('editar_motorista', id=caminhao.id) }}" method="POST" id="form-editar-motorista" style="display: none; align-items: center; gap: 8px;">
+        <input type="text" class="form-control" name="motorista" value="{{ caminhao.motorista }}" required style="min-height: 38px; padding: 6px 12px; font-size: 16px; width: 200px;">
+        <button type="submit" class="btn btn-primary btn-sm" style="min-height: 38px; font-size: 14px;">Salvar</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="cancelarEdicaoMotorista()" style="min-height: 38px; font-size: 14px;">Cancelar</button>
+    </form>
+    
+    <button id="btn-alterar-motorista" class="btn btn-secondary btn-sm" onclick="habilitarEdicaoMotorista()" style="min-height: 36px; padding: 6px 12px; font-size: 14px;">
+        ✏️ Alterar Motorista
+    </button>
+</div>
+
+<!-- FILTRO DE FECHAMENTO MENSAL -->
+<div class="dashboard-card" style="margin-bottom: 2rem; padding: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <label class="form-label" for="select-periodo" style="font-size: 16px; font-weight: 700; margin: 0; white-space: nowrap;">
+            📅 Fechamento Mensal:
+        </label>
+        <select class="form-control" id="select-periodo" onchange="selecionarPeriodo(this)" style="min-height: 42px; padding: 8px 16px; font-size: 16px; width: auto; font-weight: 600; cursor: pointer; border-color: var(--primary);">
+            {% for item in meses_periodo %}
+            <option value="mes={{ item.mes }}&ano={{ item.ano }}" {% if item.mes == mes_selecionado and item.ano == ano_selecionado %}selected{% endif %}>
+                {{ item.label }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <!-- Botão Registrar Viagem Contextualizado -->
+        <button class="btn btn-secondary btn-sm" data-open-modal="modal-viagem" style="min-height: 42px; font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid var(--primary); color: var(--primary); background: transparent;">
+            ➕ Registrar Viagem
+        </button>
+        
+        <!-- Botão Imprimir Folha Salarial -->
+        <a href="{{ url_for('folha_pagamento', id=caminhao.id, mes=mes_selecionado, ano=ano_selecionado) }}" target="_blank" class="btn btn-primary btn-sm" style="min-height: 42px; font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+            🖨️ Gerar Folha Salarial do Mês
+        </a>
+    </div>
+</div>
+
+<!-- CARDS DE MÉTRICA DO VEÍCULO -->
+<div class="card-grid" style="margin-bottom: 2rem;">
+    <!-- Faturamento Bruto -->
+    <div class="info-card success">
+        <div class="card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+        </div>
+        <div>
+            <h3 class="card-title">Faturamento Bruto</h3>
+            <div class="card-value" style="color: var(--success)">
+                <span style="font-size: 20px; font-weight: 500;">R$</span>
+                {{ "{:,.2f}".format(faturamento_bruto).replace(",", "X").replace(".", ",").replace("X", ".") }}
+            </div>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">Total de fretes no mês selecionado</p>
+    </div>
+
+    <!-- Despesas Totais -->
+    <div class="info-card danger">
+        <div class="card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+            </svg>
+        </div>
+        <div>
+            <h3 class="card-title">Despesas Totais</h3>
+            <div class="card-value" style="color: var(--danger)">
+                <span style="font-size: 20px; font-weight: 500;">R$</span>
+                {{ "{:,.2f}".format(despesas_totais).replace(",", "X").replace(".", ",").replace("X", ".") }}
+            </div>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">Manutenções + Viagens + Comissões + Prestações + Impostos</p>
+    </div>
+
+    <!-- Lucro Real -->
+    <div class="info-card {% if lucro_real >= 0 %}success{% else %}danger{% endif %}">
+        <div class="card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+        <div>
+            <h3 class="card-title">Lucro Líquido Real</h3>
+            <div class="card-value" style="color: {% if lucro_real >= 0 %}var(--success){% else %}var(--danger){% endif %}">
+                <span style="font-size: 20px; font-weight: 500;">R$</span>
+                {{ "{:,.2f}".format(lucro_real).replace(",", "X").replace(".", ",").replace("X", ".") }}
+            </div>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">Sobra real no bolso após pagar todas as despesas</p>
+    </div>
+</div>
+
+<!-- OPÇÕES E ABAS DE DETALHAMENTO (Sanfona/Acordeão Interativo) -->
+<h2 style="font-size: 20px; margin-bottom: 1rem; color: var(--text-main); font-weight: 800;">
+    🔎 Detalhamento das Contas (Clique para Expandir)
+</h2>
+
+<div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 3rem;">
+    
+    <!-- OPÇÃO 1: DESPESA MANUTENÇÃO -->
+    <div class="dashboard-card" style="padding: 0; overflow: hidden; border-radius: var(--radius-md);">
+        <button onclick="toggleSection('sec-manutencao')" style="width: 100%; padding: 1.25rem; background: none; border: none; text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 18px; font-weight: 700; color: var(--text-main);">
+            <span>🔧 1. Despesa com Manutenção (Oficina)</span>
+            <span style="display: flex; align-items: center; gap: 10px;">
+                <span style="color: var(--danger); font-weight: 800;">R$ {{ "{:,.2f}".format(despesa_manutencao).replace(",", "X").replace(".", ",").replace("X", ".") }}</span>
+                <span id="arrow-sec-manutencao">▼</span>
+            </span>
+        </button>
+        <div id="sec-manutencao" style="display: none; padding: 1.25rem; border-top: 1px solid var(--border); background-color: var(--bg-app);">
+            {% if manutencoes %}
+            <div class="table-responsive" style="margin: 0; border-radius: var(--radius-sm);">
+                <table class="custom-table" style="min-width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Descrição</th>
+                            <th>Tipo</th>
+                            <th>Oficina</th>
+                            <th style="text-align: right;">Custo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in manutencoes %}
+                        <tr>
+                            <td>{{ m.data.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ m.descricao }}</td>
+                            <td>
+                                <span class="badge {% if m.tipo == 'Preventiva' %}badge-primary{% else %}badge-warning{% endif %}">
+                                    {{ m.tipo }}
+                                </span>
+                            </td>
+                            <td>{{ m.oficina or '-' }}</td>
+                            <td style="text-align: right; color: var(--danger); font-weight: 700;">
+                                R$ {{ "{:,.2f}".format(m.custo).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 15px; text-align: center; margin: 10px 0;">Nenhum registro de manutenção neste mês.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- OPÇÃO 2: DESPESA COMISSÃO DE MOTORISTA -->
+    <div class="dashboard-card" style="padding: 0; overflow: hidden; border-radius: var(--radius-md);">
+        <button onclick="toggleSection('sec-comissao')" style="width: 100%; padding: 1.25rem; background: none; border: none; text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 18px; font-weight: 700; color: var(--text-main);">
+            <span>👨‍✈️ 2. Despesa com Comissão de Motorista</span>
+            <span style="display: flex; align-items: center; gap: 10px;">
+                <span style="color: var(--danger); font-weight: 800;">R$ {{ "{:,.2f}".format(despesa_comissao).replace(",", "X").replace(".", ",").replace("X", ".") }}</span>
+                <span id="arrow-sec-comissao">▼</span>
+            </span>
+        </button>
+        <div id="sec-comissao" style="display: none; padding: 1.25rem; border-top: 1px solid var(--border); background-color: var(--bg-app);">
+            {% if viagens %}
+            <div class="table-responsive" style="margin: 0; border-radius: var(--radius-sm);">
+                <table class="custom-table" style="min-width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Viagem (Destino)</th>
+                            <th style="text-align: right;">Comissão</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in viagens %}
+                        <tr>
+                            <td>{{ v.data.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ v.origem }} ➔ {{ v.destino }}</td>
+                            <td style="text-align: right; color: var(--danger); font-weight: 700;">
+                                R$ {{ "{:,.2f}".format(v.comissao_motorista).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 15px; text-align: center; margin: 10px 0;">Nenhuma comissão de viagem gerada neste mês.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- OPÇÃO 3: DESPESA PRESTAÇÃO E IMPOSTOS -->
+    <div class="dashboard-card" style="padding: 0; overflow: hidden; border-radius: var(--radius-md);">
+        <button onclick="toggleSection('sec-prestacao-impostos')" style="width: 100%; padding: 1.25rem; background: none; border: none; text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 18px; font-weight: 700; color: var(--text-main);">
+            <span>🏦 3. Despesa com Prestação e Impostos</span>
+            <span style="display: flex; align-items: center; gap: 10px;">
+                <span style="color: var(--danger); font-weight: 800;">R$ {{ "{:,.2f}".format(despesa_prestacao + despesa_impostos).replace(",", "X").replace(".", ",").replace("X", ".") }}</span>
+                <span id="arrow-sec-prestacao-impostos">▼</span>
+            </span>
+        </button>
+        <div id="sec-prestacao-impostos" style="display: none; padding: 1.25rem; border-top: 1px solid var(--border); background-color: var(--bg-app);">
+            {% if viagens %}
+            <div class="table-responsive" style="margin: 0; border-radius: var(--radius-sm);">
+                <table class="custom-table" style="min-width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Viagem (Destino)</th>
+                            <th style="text-align: right;">Prestação</th>
+                            <th style="text-align: right;">Impostos</th>
+                            <th style="text-align: right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in viagens %}
+                        <tr>
+                            <td>{{ v.data.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ v.origem }} ➔ {{ v.destino }}</td>
+                            <td style="text-align: right; color: var(--text-main);">
+                                R$ {{ "{:,.2f}".format(v.prestacao).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                            </td>
+                            <td style="text-align: right; color: var(--text-main);">
+                                R$ {{ "{:,.2f}".format(v.impostos).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                            </td>
+                            <td style="text-align: right; color: var(--danger); font-weight: 700;">
+                                R$ {{ "{:,.2f}".format(v.prestacao + v.impostos).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 15px; text-align: center; margin: 10px 0;">Nenhum registro de prestação ou imposto neste mês.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- OPÇÃO 4: OUTROS CUSTOS DE VIAGEM (Diesel, Pedágio e Outros) -->
+    <div class="dashboard-card" style="padding: 0; overflow: hidden; border-radius: var(--radius-md);">
+        <button onclick="toggleSection('sec-outros-custos')" style="width: 100%; padding: 1.25rem; background: none; border: none; text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 18px; font-weight: 700; color: var(--text-main);">
+            <span>⛽ 4. Combustível, Pedágio e Outros</span>
+            <span style="display: flex; align-items: center; gap: 10px;">
+                <span style="color: var(--danger); font-weight: 800;">R$ {{ "{:,.2f}".format(despesa_combustivel + despesa_pedagio + outros_custos).replace(",", "X").replace(".", ",").replace("X", ".") }}</span>
+                <span id="arrow-sec-outros-custos">▼</span>
+            </span>
+        </button>
+        <div id="sec-outros-custos" style="display: none; padding: 1.25rem; border-top: 1px solid var(--border); background-color: var(--bg-app);">
+            {% if viagens %}
+            <div class="table-responsive" style="margin: 0; border-radius: var(--radius-sm);">
+                <table class="custom-table" style="min-width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Viagem (Destino)</th>
+                            <th style="text-align: right;">Diesel</th>
+                            <th style="text-align: right;">Pedágio</th>
+                            <th style="text-align: right;">Outros</th>
+                            <th style="text-align: right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in viagens %}
+                        <tr>
+                            <td>{{ v.data.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ v.origem }} ➔ {{ v.destino }}</td>
+                            <td style="text-align: right; color: var(--text-main);">
+                                R$ {{ "{:,.2f}".format(v.custo_combustivel).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                            </td>
+                            <td style="text-align: right; color: var(--text-main);">
+                                R$ {{ "{:,.2f}".format(v.custo_pedagio).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                            </td>
+                            <td style="text-align: right; color: var(--text-main);">
+                                R$ {{ "{:,.2f}".format(v.outros_custos).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                            </td>
+                            <td style="text-align: right; color: var(--danger); font-weight: 700;">
+                                R$ {{ "{:,.2f}".format(v.custo_combustivel + v.custo_pedagio + v.outros_custos).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 15px; text-align: center; margin: 10px 0;">Nenhum gasto operacional de rota neste mês.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- OPÇÃO 5: FATURAMENTO BRUTO -->
+    <div class="dashboard-card" style="padding: 0; overflow: hidden; border-radius: var(--radius-md);">
+        <button onclick="toggleSection('sec-faturamento')" style="width: 100%; padding: 1.25rem; background: none; border: none; text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 18px; font-weight: 700; color: var(--text-main);">
+            <span>💰 5. Faturamento Bruto (Fretes)</span>
+            <span style="display: flex; align-items: center; gap: 10px;">
+                <span style="color: var(--success); font-weight: 800;">R$ {{ "{:,.2f}".format(faturamento_bruto).replace(",", "X").replace(".", ",").replace("X", ".") }}</span>
+                <span id="arrow-sec-faturamento">▼</span>
+            </span>
+        </button>
+        <div id="sec-faturamento" style="display: none; padding: 1.25rem; border-top: 1px solid var(--border); background-color: var(--bg-app);">
+            {% if viagens %}
+            <div class="table-responsive" style="margin: 0; border-radius: var(--radius-sm);">
+                <table class="custom-table" style="min-width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Origem / Destino</th>
+                            <th>Status Pago</th>
+                            <th style="text-align: right;">Frete Bruto</th>
+                            <th class="actions-col" style="text-align: right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in viagens %}
+                        <tr>
+                            <td>{{ v.data.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ v.origem }} ➔ {{ v.destino }}</td>
+                            <td>
+                                {% if v.pago %}
+                                    <span class="badge badge-success">Recebido</span>
+                                {% else %}
+                                    <span class="badge badge-warning">Pendente</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right; color: var(--success); font-weight: 700;">
+                                R$ {{ "{:,.2f}".format(v.valor_frete).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                            </td>
+                            <td class="actions-col" style="text-align: right;">
+                                <div class="table-actions" style="justify-content: flex-end;">
+                                    <button class="btn btn-secondary btn-sm edit-viagem-btn" 
+                                            style="padding: 8px 12px; min-height: 36px;" 
+                                            data-id="{{ v.id }}"
+                                            data-caminhao-id="{{ v.caminhao_id }}"
+                                            data-origem="{{ v.origem }}"
+                                            data-destino="{{ v.destino }}"
+                                            data-data="{{ v.data.strftime('%Y-%m-%d') }}"
+                                            data-valor-frete="{{ v.valor_frete }}"
+                                            data-custo-combustivel="{{ v.custo_combustivel }}"
+                                            data-custo-pedagio="{{ v.custo_pedagio }}"
+                                            data-outros-custos="{{ v.outros_custos }}"
+                                            data-comissao-motorista="{{ v.comissao_motorista }}"
+                                            data-prestacao="{{ v.prestacao }}"
+                                            data-impostos="{{ v.impostos }}"
+                                            data-pago="{{ 'True' if v.pago else 'False' }}"
+                                            data-observacoes="{{ v.observacoes or '' }}">
+                                        ✏️
+                                    </button>
+                                    <a href="{{ url_for('deletar_viagem', id=v.id) }}" class="btn btn-danger btn-sm" style="padding: 8px 12px; min-height: 36px;" onclick="return confirm('Tem certeza que deseja excluir esta viagem?')">
+                                        🗑️
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 15px; text-align: center; margin: 10px 0;">Nenhum faturamento registrado neste mês.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- ==========================================
+     MODAL DE CADASTRO DE NOVA VIAGEM
+     ========================================== -->
+<div class="modal-backdrop" id="modal-viagem">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2 style="font-size: 22px;">Registrar Nova Viagem - {{ caminhao.placa }}</h2>
+            <button class="modal-close">&times;</button>
+        </div>
+        
+        <form action="{{ url_for('viagens') }}" method="POST">
+            <input type="hidden" name="caminhao_id" id="caminhao_id" value="{{ caminhao.id }}">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Caminhão</label>
+                    <input type="text" class="form-control" value="{{ caminhao.placa }} - {{ caminhao.modelo }}" disabled style="background-color: var(--border);">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="origem">Cidade de Origem *</label>
+                        <input type="text" class="form-control" name="origem" id="origem" placeholder="Ex: São Paulo - SP" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="destino">Cidade de Destino *</label>
+                        <input type="text" class="form-control" name="destino" id="destino" placeholder="Ex: Rio de Janeiro - RJ" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="data">Data de Partida *</label>
+                        <input type="date" class="form-control" name="data" id="data" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="pago">Status do Pagamento</label>
+                        <select class="form-control" name="pago" id="pago">
+                            <option value="False">Pendente (A receber)</option>
+                            <option value="True">Pago (Recebido)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+                <h3 style="font-size: 18px; margin-bottom: 1rem; color: var(--primary);">Valores Financeiros (R$)</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="valor_frete">Valor do Frete Bruto *</label>
+                        <input type="number" step="0.01" class="form-control" name="valor_frete" id="valor_frete" placeholder="0,00" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="custo_combustivel">Gasto com Diesel</label>
+                        <input type="number" step="0.01" class="form-control" name="custo_combustivel" id="custo_combustivel" placeholder="0,00">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="custo_pedagio">Gasto com Pedágio</label>
+                        <input type="number" step="0.01" class="form-control" name="custo_pedagio" id="custo_pedagio" placeholder="0,00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="outros_custos">Outras Despesas</label>
+                        <input type="number" step="0.01" class="form-control" name="outros_custos" id="outros_custos" placeholder="0,00">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="comissao_motorista">Comissão do Motorista</label>
+                        <input type="number" step="0.01" class="form-control" name="comissao_motorista" id="comissao_motorista" placeholder="0,00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="prestacao">Prestação do Veículo</label>
+                        <input type="number" step="0.01" class="form-control" name="prestacao" id="prestacao" placeholder="0,00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="impostos">Impostos</label>
+                        <input type="number" step="0.01" class="form-control" name="impostos" id="impostos" placeholder="0,00">
+                    </div>
+                </div>
+
+                <!-- PREVIEW DE LUCRO EM TEMPO REAL -->
+                <div class="lucro-preview-box">
+                    <span>LUCRO LÍQUIDO SIMULADO:</span>
+                    <span id="lucro_preview_valor">R$ 0,00</span>
+                </div>
+                
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label class="form-label" for="observacoes">Observações de Viagem (Opcional)</label>
+                    <textarea class="form-control" name="observacoes" id="observacoes" rows="2" placeholder="Ex: Carga frágil, motorista terceirizado, detalhes de descarga..."></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-close-modal>Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm">Registrar Viagem</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODAL DE EDIÇÃO DE VIAGEM
+     ========================================== -->
+<div class="modal-backdrop" id="modal-editar-viagem">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2 style="font-size: 22px;">Editar Viagem - {{ caminhao.placa }}</h2>
+            <button class="modal-close">&times;</button>
+        </div>
+        
+        <form id="form-editar-viagem" action="" method="POST">
+            <input type="hidden" name="caminhao_id" id="edit_caminhao_id" value="{{ caminhao.id }}">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Caminhão</label>
+                    <input type="text" class="form-control" value="{{ caminhao.placa }} - {{ caminhao.modelo }}" disabled style="background-color: var(--border);">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="edit_origem">Cidade de Origem *</label>
+                        <input type="text" class="form-control" name="origem" id="edit_origem" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_destino">Cidade de Destino *</label>
+                        <input type="text" class="form-control" name="destino" id="edit_destino" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="edit_data">Data de Partida *</label>
+                        <input type="date" class="form-control" name="data" id="edit_data" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_pago">Status do Pagamento</label>
+                        <select class="form-control" name="pago" id="edit_pago">
+                            <option value="False">Pendente (A receber)</option>
+                            <option value="True">Pago (Recebido)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+                <h3 style="font-size: 18px; margin-bottom: 1rem; color: var(--primary);">Valores Financeiros (R$)</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="edit_valor_frete">Valor do Frete Bruto *</label>
+                        <input type="number" step="0.01" class="form-control" name="valor_frete" id="edit_valor_frete" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_custo_combustivel">Gasto com Diesel</label>
+                        <input type="number" step="0.01" class="form-control" name="custo_combustivel" id="edit_custo_combustivel">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="edit_custo_pedagio">Gasto com Pedágio</label>
+                        <input type="number" step="0.01" class="form-control" name="custo_pedagio" id="edit_custo_pedagio">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_outros_custos">Outras Despesas</label>
+                        <input type="number" step="0.01" class="form-control" name="outros_custos" id="edit_outros_custos">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="edit_comissao_motorista">Comissão do Motorista</label>
+                        <input type="number" step="0.01" class="form-control" name="comissao_motorista" id="edit_comissao_motorista">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_prestacao">Prestação do Veículo</label>
+                        <input type="number" step="0.01" class="form-control" name="prestacao" id="edit_prestacao">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_impostos">Impostos</label>
+                        <input type="number" step="0.01" class="form-control" name="impostos" id="edit_impostos">
+                    </div>
+                </div>
+
+                <!-- PREVIEW DE LUCRO EM TEMPO REAL NO EDIT -->
+                <div class="lucro-preview-box">
+                    <span>LUCRO LÍQUIDO SIMULADO:</span>
+                    <span id="lucro_preview_valor_edit">R$ 0,00</span>
+                </div>
+                
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label class="form-label" for="edit_observacoes">Observações de Viagem (Opcional)</label>
+                    <textarea class="form-control" name="observacoes" id="edit_observacoes" rows="2"></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-close-modal>Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm">Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Função utilitária para expandir/recolher seções (Acordeão)
+    function toggleSection(id) {
+        const sec = document.getElementById(id);
+        const arrow = document.getElementById('arrow-' + id);
+        
+        if (sec.style.display === 'none' || !sec.style.display) {
+            sec.style.display = 'block';
+            arrow.textContent = '▲';
+            sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            sec.style.display = 'none';
+            arrow.textContent = '▼';
+        }
+    }
+
+    // Função de navegação rápida por período
+    function selecionarPeriodo(select) {
+        const val = select.value; // e.g. "mes=6&ano=2026"
+        window.location.href = `{{ url_for('detalhes_caminhao', id=caminhao.id) }}?${val}`;
+    }
+
+    // Funções para edição de motorista inline
+    function habilitarEdicaoMotorista() {
+        document.getElementById('container-motorista-info').style.display = 'none';
+        document.getElementById('btn-alterar-motorista').style.display = 'none';
+        document.getElementById('form-editar-motorista').style.display = 'flex';
+    }
+
+    function cancelarEdicaoMotorista() {
+        document.getElementById('container-motorista-info').style.display = 'flex';
+        document.getElementById('btn-alterar-motorista').style.display = 'inline-flex';
+        document.getElementById('form-editar-motorista').style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Autofill do input date do modal com a data de hoje
+        const dataInput = document.getElementById('data');
+        if (dataInput) {
+            dataInput.value = new Date().toISOString().substring(0, 10);
+        }
+
+        // --- CÁLCULO E AUTOMATIZAÇÃO DO CADASTRO ---
+        const valFrete = document.getElementById('valor_frete');
+        const valDiesel = document.getElementById('custo_combustivel');
+        const valPedagio = document.getElementById('custo_pedagio');
+        const valOutros = document.getElementById('outros_custos');
+        const valComissao = document.getElementById('comissao_motorista');
+        const valPrestacao = document.getElementById('prestacao');
+        const valImpostos = document.getElementById('impostos');
+        const displayLucro = document.getElementById('lucro_preview_valor');
+
+        function calcularCadastro() {
+            const frete = parseFloat(valFrete.value) || 0;
+            const diesel = parseFloat(valDiesel.value) || 0;
+            const pedagio = parseFloat(valPedagio.value) || 0;
+            const outros = parseFloat(valOutros.value) || 0;
+            const comissao = parseFloat(valComissao.value) || 0;
+            const prestacao = parseFloat(valPrestacao.value) || 0;
+            const impostos = parseFloat(valImpostos.value) || 0;
+
+            const lucro = frete - (diesel + pedagio + outros + comissao + prestacao + impostos);
+            if (displayLucro) {
+                displayLucro.textContent = lucro.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const box = displayLucro.closest('.lucro-preview-box');
+                if (box) {
+                    if (lucro < 0) {
+                        box.style.backgroundColor = 'var(--danger-light)';
+                        box.style.color = 'var(--danger)';
+                        box.style.borderColor = 'var(--danger)';
+                    } else {
+                        box.style.backgroundColor = 'var(--success-light)';
+                        box.style.color = 'var(--success)';
+                        box.style.borderColor = 'var(--success)';
+                    }
+                }
+            }
+        }
+
+        if (valFrete) {
+            valFrete.addEventListener('input', () => {
+                const val = parseFloat(valFrete.value) || 0;
+                if (valComissao) valComissao.value = (val * 0.12).toFixed(2);
+                if (valImpostos) valImpostos.value = (val * 0.10).toFixed(2);
+                calcularCadastro();
+            });
+            [valDiesel, valPedagio, valOutros, valComissao, valPrestacao, valImpostos].forEach(inpt => {
+                if (inpt) inpt.addEventListener('input', calcularCadastro);
+            });
+        }
+
+        // --- EDIÇÃO DE VIAGENS ---
+        document.querySelectorAll('.edit-viagem-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const caminhaoId = btn.getAttribute('data-caminhao-id');
+                const origem = btn.getAttribute('data-origem');
+                const destino = btn.getAttribute('data-destino');
+                const dataVal = btn.getAttribute('data-data');
+                const frete = btn.getAttribute('data-valor-frete');
+                const combustivel = btn.getAttribute('data-custo-combustivel');
+                const pedagio = btn.getAttribute('data-custo-pedagio');
+                const outros = btn.getAttribute('data-outros-custos');
+                const comissao = btn.getAttribute('data-comissao-motorista');
+                const prestacao = btn.getAttribute('data-prestacao');
+                const impostos = btn.getAttribute('data-impostos');
+                const pago = btn.getAttribute('data-pago');
+                const observacoes = btn.getAttribute('data-observacoes');
+
+                const form = document.getElementById('form-editar-viagem');
+                form.action = `/viagens/editar/${id}`;
+                
+                abrirModalEdicao('modal-editar-viagem', {
+                    caminhao_id: caminhaoId,
+                    origem: origem,
+                    destino: destino,
+                    data: dataVal,
+                    valor_frete: frete,
+                    custo_combustivel: combustivel,
+                    custo_pedagio: pedagio,
+                    outros_custos: outros,
+                    comissao_motorista: comissao,
+                    prestacao: prestacao,
+                    impostos: impostos,
+                    pago: pago,
+                    observacoes: observacoes
+                });
+
+                const inputFrete = document.getElementById('edit_valor_frete');
+                const inputCombustivel = document.getElementById('edit_custo_combustivel');
+                const inputPedagio = document.getElementById('edit_custo_pedagio');
+                const inputOutros = document.getElementById('edit_outros_custos');
+                const inputComissao = document.getElementById('edit_comissao_motorista');
+                const inputPrestacao = document.getElementById('edit_prestacao');
+                const inputImpostos = document.getElementById('edit_impostos');
+                const boxLucro = document.getElementById('lucro_preview_valor_edit');
+
+                const inputs = [inputFrete, inputCombustivel, inputPedagio, inputOutros, inputComissao, inputPrestacao, inputImpostos];
+
+                if (inputFrete) {
+                    inputFrete.addEventListener('input', () => {
+                        const val = parseFloat(inputFrete.value) || 0;
+                        inputComissao.value = (val * 0.12).toFixed(2);
+                        inputImpostos.value = (val * 0.10).toFixed(2);
+                    });
+                }
+
+                function calcularEdit() {
+                    const freteVal = parseFloat(inputFrete.value) || 0;
+                    const combustivelVal = parseFloat(inputCombustivel.value) || 0;
+                    const pedagioVal = parseFloat(inputPedagio.value) || 0;
+                    const outrosVal = parseFloat(inputOutros.value) || 0;
+                    const comissaoVal = parseFloat(inputComissao.value) || 0;
+                    const prestacaoVal = parseFloat(inputPrestacao.value) || 0;
+                    const impostosVal = parseFloat(inputImpostos.value) || 0;
+
+                    const lucroVal = freteVal - (combustivelVal + pedagioVal + outrosVal + comissaoVal + prestacaoVal + impostosVal);
+                    boxLucro.textContent = lucroVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                    const container = boxLucro.closest('.lucro-preview-box');
+                    if (container) {
+                        if (lucroVal < 0) {
+                            container.style.backgroundColor = 'var(--danger-light)';
+                            container.style.color = 'var(--danger)';
+                            container.style.borderColor = 'var(--danger)';
+                        } else {
+                            container.style.backgroundColor = 'var(--success-light)';
+                            container.style.color = 'var(--success)';
+                            container.style.borderColor = 'var(--success)';
+                        }
+                    }
+                }
+
+                inputs.forEach(inpt => {
+                    if (inpt) {
+                        inpt.removeEventListener('input', calcularEdit);
+                        inpt.addEventListener('input', calcularEdit);
+                    }
+                });
+
+                calcularEdit();
+            });
+        });
+    });
+</script>
+{% endblock %}

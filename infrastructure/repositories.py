@@ -24,7 +24,8 @@ def _to_domain_caminhao(model) -> Caminhao:
         modelo=model.modelo,
         ano=model.ano,
         cor=model.cor,
-        status=model.status
+        status=model.status,
+        motorista=model.motorista
     )
 
 def _to_domain_viagem(model) -> Viagem:
@@ -40,6 +41,9 @@ def _to_domain_viagem(model) -> Viagem:
         custo_combustivel=model.custo_combustivel,
         custo_pedagio=model.custo_pedagio,
         outros_custos=model.outros_custos,
+        comissao_motorista=model.comissao_motorista,
+        prestacao=model.prestacao,
+        impostos=model.impostos,
         lucro_liquido=model.lucro_liquido,
         pago=model.pago,
         observacoes=model.observacoes,
@@ -115,13 +119,15 @@ class CaminhaoRepository:
             model.ano = entity.ano
             model.cor = entity.cor
             model.status = entity.status
+            model.motorista = entity.motorista
         else:
             model = CaminhaoModel(
                 placa=entity.placa.upper(),
                 modelo=entity.modelo,
                 ano=entity.ano,
                 cor=entity.cor,
-                status=entity.status
+                status=entity.status,
+                motorista=entity.motorista
             )
             db.session.add(model)
             
@@ -160,6 +166,9 @@ class ViagemRepository:
             model.custo_combustivel = entity.custo_combustivel
             model.custo_pedagio = entity.custo_pedagio
             model.outros_custos = entity.outros_custos
+            model.comissao_motorista = entity.comissao_motorista
+            model.prestacao = entity.prestacao
+            model.impostos = entity.impostos
             model.lucro_liquido = entity.lucro_liquido
             model.pago = entity.pago
             model.observacoes = entity.observacoes
@@ -173,6 +182,9 @@ class ViagemRepository:
                 custo_combustivel=entity.custo_combustivel,
                 custo_pedagio=entity.custo_pedagio,
                 outros_custos=entity.outros_custos,
+                comissao_motorista=entity.comissao_motorista,
+                prestacao=entity.prestacao,
+                impostos=entity.impostos,
                 lucro_liquido=entity.lucro_liquido,
                 pago=entity.pago,
                 observacoes=entity.observacoes

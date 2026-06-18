@@ -19,6 +19,7 @@ class CaminhaoModel(db.Model):
     ano = db.Column(db.Integer, nullable=False)
     cor = db.Column(db.String(50), nullable=True)
     status = db.Column(db.String(50), default='Disponível')
+    motorista = db.Column(db.String(100), nullable=True, default='Não definido')
 
     # Relacionamentos com cascade para integridade referencial
     viagens = db.relationship('ViagemModel', backref='caminhao', lazy=True, cascade="all, delete-orphan")
@@ -39,6 +40,9 @@ class ViagemModel(db.Model):
     custo_combustivel = db.Column(db.Float, nullable=False, default=0.0)
     custo_pedagio = db.Column(db.Float, nullable=False, default=0.0)
     outros_custos = db.Column(db.Float, nullable=False, default=0.0)
+    comissao_motorista = db.Column(db.Float, nullable=False, default=0.0)
+    prestacao = db.Column(db.Float, nullable=False, default=0.0)
+    impostos = db.Column(db.Float, nullable=False, default=0.0)
     lucro_liquido = db.Column(db.Float, nullable=False, default=0.0)
     pago = db.Column(db.Boolean, default=False)
     observacoes = db.Column(db.Text, nullable=True)

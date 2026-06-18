@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Folha de Pagamento - {{ caminhao.motorista }} - {{ referencia }}</title>
+    <style>
+        /* Estilos base otimizados para leitura física e impressão */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1e293b;
+            background-color: #fff;
+            line-height: 1.5;
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .receipt-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #cbd5e1;
+            padding: 40px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        /* Cabeçalho do Recibo */
+        .receipt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .company-info h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.03em;
+        }
+
+        .company-info p {
+            color: #64748b;
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        .doc-title {
+            text-align: right;
+        }
+
+        .doc-title h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            text-transform: uppercase;
+        }
+
+        .doc-title .ref-month {
+            font-size: 15px;
+            color: #2563eb;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        /* Detalhes do Motorista e Veículo */
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 18px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+
+        .detail-item span {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .detail-item strong {
+            font-size: 16px;
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        /* Tabela de Viagens */
+        .trips-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .trips-table th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+            color: #475569;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .trips-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+        }
+
+        .trips-table tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        /* Totalizador */
+        .total-box {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 50px;
+        }
+
+        .total-card {
+            background-color: #0f172a;
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 6px;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .total-card span {
+            font-size: 13px;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        .total-card strong {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        /* Linhas de Assinatura */
+        .signature-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-top: 60px;
+            border-top: 1px dashed #cbd5e1;
+            padding-top: 40px;
+        }
+
+        .signature-box {
+            text-align: center;
+        }
+
+        .signature-line {
+            width: 80%;
+            margin: 0 auto 10px auto;
+            border-bottom: 1.5px solid #0f172a;
+        }
+
+        .signature-box p {
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .signature-box span {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        /* Botão de Impressão Flutuante */
+        .print-btn-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9999;
+        }
+
+        .btn-print {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 16px 28px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-print:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.5);
+        }
+
+        /* Ocultações e ajustes para a folha física na Impressão */
+        @media print {
+            body {
+                padding: 0;
+            }
+            .receipt-container {
+                border: none;
+                padding: 0;
+                max-width: 100%;
+            }
+            .print-btn-container {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="receipt-container">
+        
+        <!-- Cabeçalho -->
+        <header class="receipt-header">
+            <div class="company-info">
+                <h1>RotaFácil</h1>
+                <p>Gestão de Frotas e Controle de Rotas</p>
+                <p style="font-size: 11px; margin-top: 5px;">Gerado eletronicamente em {{ today_date }}</p>
+            </div>
+            <div class="doc-title">
+                <h2>Folha Salarial</h2>
+                <div class="ref-month">{{ referencia }}</div>
+            </div>
+        </header>
+
+        <!-- Detalhes do Contrato -->
+        <section class="details-grid">
+            <div class="detail-item">
+                <span>Motorista Beneficiário</span>
+                <strong>{{ caminhao.motorista }}</strong>
+            </div>
+            <div class="detail-item">
+                <span>Veículo Responsável</span>
+                <strong>{{ caminhao.modelo }} ({{ caminhao.placa }})</strong>
+            </div>
+        </section>
+
+        <!-- Tabela de Viagens -->
+        <section>
+            <h3 style="font-size: 13px; text-transform: uppercase; color: #475569; letter-spacing: 0.05em; margin-bottom: 12px; font-weight: 800;">
+                📋 Demonstrativo de Viagens e Comissões
+            </h3>
+            <table class="trips-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Rota (Origem ➔ Destino)</th>
+                        <th class="text-right">Frete Bruto</th>
+                        <th class="text-right">Comissão</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in viagens %}
+                    <tr>
+                        <td>{{ v.data.strftime('%d/%m/%Y') }}</td>
+                        <td><strong>{{ v.origem }}</strong> ➔ <strong>{{ v.destino }}</strong></td>
+                        <td class="text-right">R$ {{ "{:,.2f}".format(v.valor_frete).replace(",", "X").replace(".", ",").replace("X", ".") }}</td>
+                        <td class="text-right" style="font-weight: 700; color: #000;">
+                            R$ {{ "{:,.2f}".format(v.comissao_motorista).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #64748b; padding: 20px;">
+                            Nenhuma viagem realizada pelo veículo neste período.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Total Geral de Comissão -->
+        <section class="total-box">
+            <div class="total-card">
+                <span>Total Líquido a Receber:</span>
+                <strong>R$ {{ "{:,.2f}".format(despesa_comissao).replace(",", "X").replace(".", ",").replace("X", ".") }}</strong>
+            </div>
+        </section>
+
+        <!-- Assinaturas -->
+        <footer class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <p>{{ caminhao.motorista }}</p>
+                <span>Assinatura do Motorista</span>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <p>RotaFácil Administrador</p>
+                <span>Assinatura do Responsável</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Botão Flutuante de Impressão -->
+    <div class="print-btn-container">
+        <button class="btn-print" onclick="window.print()">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 1.522A1 1 0 0116.9 20.5H7.1a1 1 0 01-.989-1.022L6.34 18m11.32 0a2.077 2.077 0 00.72-.346m-11.32 0a2.077 2.077 0 01-.72-.346M6.34 18l11.32 0m1.236-4.496A1 1 0 0018 12.5H6a1 1 0 00-.976.825L4.01 19.5h15.98l-1.416-5.996zM15 8h.01M19 8h.01M5 8h.01M9 8h.01M11 5h2M12 2v3"></path>
+            </svg>
+            Imprimir / Salvar PDF
+        </button>
+    </div>
+
+</body>
+</html>

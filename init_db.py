@@ -19,9 +19,9 @@ def init_database():
 
         # 2. Cria 3 Caminhões de Exemplo (Frota inicial)
         print("Criando caminhões...")
-        c1 = fleet_service.register_truck('BRA2E19', 'Volvo FH 540 Globetrotter', 2021, 'Branco', 'Em Viagem')
-        c2 = fleet_service.register_truck('BRA3F22', 'Scania R 450 Highline', 2022, 'Vermelho', 'Disponível')
-        c3 = fleet_service.register_truck('BRA4G25', 'Mercedes-Benz Actros 2651', 2020, 'Azul Escuro', 'Em Manutenção')
+        c1 = fleet_service.register_truck('BRA2E19', 'Volvo FH 540 Globetrotter', 2021, 'Branco', 'Em Viagem', motorista='Carlos Souza')
+        c2 = fleet_service.register_truck('BRA3F22', 'Scania R 450 Highline', 2022, 'Vermelho', 'Disponível', motorista='José Santos')
+        c3 = fleet_service.register_truck('BRA4G25', 'Mercedes-Benz Actros 2651', 2020, 'Azul Escuro', 'Em Manutenção', motorista='Antônio Lima')
 
         # 3. Cria Viagens de Exemplo (últimos 3 meses)
         print("Criando viagens...")
@@ -34,6 +34,9 @@ def init_database():
             custo_combustivel=1400.00,
             custo_pedagio=350.00,
             outros_custos=150.00,
+            comissao_motorista=300.00,
+            prestacao=500.00,
+            impostos=120.00,
             pago=True,
             observacoes='Carga de bobinas de papel. Tudo OK.'
         )
@@ -46,6 +49,9 @@ def init_database():
             custo_combustivel=1700.00,
             custo_pedagio=280.00,
             outros_custos=100.00,
+            comissao_motorista=350.00,
+            prestacao=500.00,
+            impostos=150.00,
             pago=True,
             observacoes='Carga seca, grãos. Frete rápido.'
         )
@@ -58,6 +64,9 @@ def init_database():
             custo_combustivel=2100.00,
             custo_pedagio=420.00,
             outros_custos=200.00,
+            comissao_motorista=400.00,
+            prestacao=500.00,
+            impostos=200.00,
             pago=True,
             observacoes='Minério de ferro. Pedágios caros.'
         )
@@ -70,6 +79,9 @@ def init_database():
             custo_combustivel=550.00,
             custo_pedagio=120.00,
             outros_custos=50.00,
+            comissao_motorista=150.00,
+            prestacao=300.00,
+            impostos=80.00,
             pago=False,
             observacoes='Carga fracionada expressa. Aguardando liberação do faturamento.'
         )

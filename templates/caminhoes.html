@@ -47,8 +47,11 @@
 
         <div>
             <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 4px;">{{ caminhao.modelo }}</h2>
-            <p style="color: var(--text-muted); font-size: 16px; margin-bottom: 1rem;">
+            <p style="color: var(--text-muted); font-size: 16px; margin-bottom: 8px;">
                 Ano: <strong>{{ caminhao.ano }}</strong> • Cor: <strong>{{ caminhao.cor or 'Não informada' }}</strong>
+            </p>
+            <p style="font-size: 16px; margin-bottom: 1rem;">
+                👤 Motorista: <strong>{{ caminhao.motorista }}</strong>
             </p>
         </div>
 
@@ -63,7 +66,8 @@
                         data-modelo="{{ caminhao.modelo }}"
                         data-ano="{{ caminhao.ano }}"
                         data-cor="{{ caminhao.cor or '' }}"
-                        data-status="{{ caminhao.status }}">
+                        data-status="{{ caminhao.status }}"
+                        data-motorista="{{ caminhao.motorista }}">
                     ✏️ Editar
                 </button>
                 <a href="{{ url_for('deletar_caminhao', id=caminhao.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja excluir o caminhão {{ caminhao.placa }}? Todas as viagens e manutenções associadas a ele também serão apagadas!')" style="padding: 8px 12px;">
@@ -123,6 +127,11 @@
                         <input type="text" class="form-control" name="cor" id="cor" placeholder="Ex: Branco, Vermelho">
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="motorista">Motorista Responsável</label>
+                    <input type="text" class="form-control" name="motorista" id="motorista" placeholder="Ex: Carlos Souza" value="Não definido">
+                </div>
                 
                 <div class="form-group">
                     <label class="form-label" for="status">Status Inicial</label>
@@ -174,6 +183,11 @@
                         <input type="text" class="form-control" name="cor" id="edit_cor">
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="edit_motorista">Motorista Responsável</label>
+                    <input type="text" class="form-control" name="motorista" id="edit_motorista" placeholder="Ex: Carlos Souza">
+                </div>
                 
                 <div class="form-group">
                     <label class="form-label" for="edit_status">Status Atual</label>
@@ -210,6 +224,7 @@
                 const ano = btn.getAttribute('data-ano');
                 const cor = btn.getAttribute('data-cor');
                 const status = btn.getAttribute('data-status');
+                const motorista = btn.getAttribute('data-motorista');
 
                 const form = document.getElementById('form-editar-caminhao');
                 form.action = `/caminhoes/editar/${id}`;
@@ -219,7 +234,8 @@
                     modelo: modelo,
                     ano: ano,
                     cor: cor,
-                    status: status
+                    status: status,
+                    motorista: motorista
                 });
             });
         });
