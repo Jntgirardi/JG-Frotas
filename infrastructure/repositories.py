@@ -37,6 +37,7 @@ def _to_domain_viagem(model) -> Viagem:
         origem=model.origem,
         destino=model.destino,
         data=model.data,
+        data_chegada=model.data_chegada,
         valor_frete=model.valor_frete,
         custo_combustivel=model.custo_combustivel,
         custo_pedagio=model.custo_pedagio,
@@ -162,6 +163,7 @@ class ViagemRepository:
             model.origem = entity.origem
             model.destino = entity.destino
             model.data = entity.data
+            model.data_chegada = entity.data_chegada
             model.valor_frete = entity.valor_frete
             model.custo_combustivel = entity.custo_combustivel
             model.custo_pedagio = entity.custo_pedagio
@@ -178,6 +180,7 @@ class ViagemRepository:
                 origem=entity.origem,
                 destino=entity.destino,
                 data=entity.data,
+                data_chegada=entity.data_chegada,
                 valor_frete=entity.valor_frete,
                 custo_combustivel=entity.custo_combustivel,
                 custo_pedagio=entity.custo_pedagio,

@@ -4,6 +4,7 @@ import os
 
 # Define a variável de ambiente de teste antes de importar o app
 os.environ['TESTING'] = 'true'
+os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
 
 # Garante que a raiz do projeto esteja no path do Python
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -83,6 +84,7 @@ class RotaFacilSecurityTestCase(unittest.TestCase):
             origem='SP',
             destino='RJ',
             data=date(2026, 6, 18),
+            data_chegada=date(2026, 6, 19),
             valor_frete=10000.0,
             custo_combustivel=3000.0,
             custo_pedagio=500.0,
@@ -96,6 +98,7 @@ class RotaFacilSecurityTestCase(unittest.TestCase):
         
         # Lucro líquido esperado: 10000 - (3000 + 500 + 200 + 1200 + 1000 + 1000) = 3100
         self.assertEqual(trip.lucro_liquido, 3100.0)
+        self.assertEqual(trip.data_chegada, date(2026, 6, 19))
 
     def test_duplicate_truck_plate_raises_error(self):
         """Valida que o sistema impede cadastrar placas de caminhões duplicadas"""

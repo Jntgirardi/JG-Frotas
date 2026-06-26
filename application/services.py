@@ -83,13 +83,14 @@ class TripService:
     def register_trip(self, caminhao_id, origem, destino, data, valor_frete, 
                       custo_combustivel=0.0, custo_pedagio=0.0, outros_custos=0.0, 
                       comissao_motorista=0.0, prestacao=0.0, impostos=0.0,
-                      pago=False, observacoes=None) -> Viagem:
+                      pago=False, observacoes=None, data_chegada=None) -> Viagem:
         
         nova = Viagem(
             caminhao_id=caminhao_id,
             origem=origem,
             destino=destino,
             data=data,
+            data_chegada=data_chegada,
             valor_frete=valor_frete,
             custo_combustivel=custo_combustivel,
             custo_pedagio=custo_pedagio,
@@ -113,7 +114,7 @@ class TripService:
     def update_trip(self, id, caminhao_id, origem, destino, data, valor_frete, 
                     custo_combustivel=0.0, custo_pedagio=0.0, outros_custos=0.0, 
                     comissao_motorista=0.0, prestacao=0.0, impostos=0.0,
-                    pago=False, observacoes=None) -> Viagem:
+                    pago=False, observacoes=None, data_chegada=None) -> Viagem:
         
         viagem = Viagem(
             id=id,
@@ -121,6 +122,7 @@ class TripService:
             origem=origem,
             destino=destino,
             data=data,
+            data_chegada=data_chegada,
             valor_frete=valor_frete,
             custo_combustivel=custo_combustivel,
             custo_pedagio=custo_pedagio,

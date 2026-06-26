@@ -339,7 +339,7 @@
                 <table class="custom-table" style="min-width: 100%;">
                     <thead>
                         <tr>
-                            <th>Data</th>
+                            <th>Período (Saída / Chegada)</th>
                             <th>Origem / Destino</th>
                             <th>Status Pago</th>
                             <th style="text-align: right;">Frete Bruto</th>
@@ -349,7 +349,10 @@
                     <tbody>
                         {% for v in viagens %}
                         <tr>
-                            <td>{{ v.data.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                <div>{{ v.data.strftime('%d/%m/%Y') }} <span style="font-size: 11px; color: var(--primary);">➔ Saída</span></div>
+                                <div style="font-size: 13px; color: var(--text-muted)">{{ v.data_chegada.strftime('%d/%m/%Y') if v.data_chegada else '-' }} <span style="font-size: 11px;">➔ Chegada</span></div>
+                            </td>
                             <td>{{ v.origem }} ➔ {{ v.destino }}</td>
                             <td>
                                 {% if v.pago %}
@@ -370,6 +373,7 @@
                                             data-origem="{{ v.origem }}"
                                             data-destino="{{ v.destino }}"
                                             data-data="{{ v.data.strftime('%Y-%m-%d') }}"
+                                            data-data-chegada="{{ v.data_chegada.strftime('%Y-%m-%d') if v.data_chegada else '' }}"
                                             data-valor-frete="{{ v.valor_frete }}"
                                             data-custo-combustivel="{{ v.custo_combustivel }}"
                                             data-custo-pedagio="{{ v.custo_pedagio }}"
@@ -432,6 +436,10 @@
                     <div class="form-group">
                         <label class="form-label" for="data">Data de Partida *</label>
                         <input type="date" class="form-control" name="data" id="data" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="data_chegada">Data de Chegada *</label>
+                        <input type="date" class="form-control" name="data_chegada" id="data_chegada" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="pago">Status do Pagamento</label>
@@ -535,6 +543,10 @@
                     <div class="form-group">
                         <label class="form-label" for="edit_data">Data de Partida *</label>
                         <input type="date" class="form-control" name="data" id="edit_data" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_data_chegada">Data de Chegada *</label>
+                        <input type="date" class="form-control" name="data_chegada" id="edit_data_chegada" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="edit_pago">Status do Pagamento</label>
@@ -649,6 +661,10 @@
         if (dataInput) {
             dataInput.value = new Date().toISOString().substring(0, 10);
         }
+        const dataChegadaInput = document.getElementById('data_chegada');
+        if (dataChegadaInput) {
+            dataChegadaInput.value = new Date().toISOString().substring(0, 10);
+        }
 
         // --- CÁLCULO E AUTOMATIZAÇÃO DO CADASTRO ---
         const valFrete = document.getElementById('valor_frete');
@@ -698,8 +714,7 @@
                 if (inpt) inpt.addEventListener('input', calcularCadastro);
             });
         }
-
-        // --- EDIÇÃO DE VIAGENS ---
+                    // --- EDIÇÃO DE VIAGENS ---
         document.querySelectorAll('.edit-viagem-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
@@ -707,6 +722,7 @@
                 const origem = btn.getAttribute('data-origem');
                 const destino = btn.getAttribute('data-destino');
                 const dataVal = btn.getAttribute('data-data');
+                const dataChegadaVal = btn.getAttribute('data-data-chegada');
                 const frete = btn.getAttribute('data-valor-frete');
                 const combustivel = btn.getAttribute('data-custo-combustivel');
                 const pedagio = btn.getAttribute('data-custo-pedagio');
@@ -716,7 +732,7 @@
                 const impostos = btn.getAttribute('data-impostos');
                 const pago = btn.getAttribute('data-pago');
                 const observacoes = btn.getAttribute('data-observacoes');
-
+ 
                 const form = document.getElementById('form-editar-viagem');
                 form.action = `/viagens/editar/${id}`;
                 
@@ -725,6 +741,7 @@
                     origem: origem,
                     destino: destino,
                     data: dataVal,
+                    data_chegada: dataChegadaVal,
                     valor_frete: frete,
                     custo_combustivel: combustivel,
                     custo_pedagio: pedagio,

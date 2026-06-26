@@ -193,6 +193,7 @@ def viagens():
         origem = request.form.get('origem').strip()
         destino = request.form.get('destino').strip()
         data_str = request.form.get('data')
+        data_chegada_str = request.form.get('data_chegada')
         valor_frete = float(request.form.get('valor_frete', 0.0) or 0)
         custo_combustivel = float(request.form.get('custo_combustivel', 0.0) or 0)
         custo_pedagio = float(request.form.get('custo_pedagio', 0.0) or 0)
@@ -204,12 +205,14 @@ def viagens():
         observacoes = request.form.get('observacoes').strip()
 
         data_viagem = datetime.strptime(data_str, '%Y-%m-%d').date() if data_str else date.today()
+        data_chegada = datetime.strptime(data_chegada_str, '%Y-%m-%d').date() if data_chegada_str else data_viagem
 
         trip_service.register_trip(
             caminhao_id=caminhao_id,
             origem=origem,
             destino=destino,
             data=data_viagem,
+            data_chegada=data_chegada,
             valor_frete=valor_frete,
             custo_combustivel=custo_combustivel,
             custo_pedagio=custo_pedagio,
@@ -233,6 +236,7 @@ def editar_viagem(id):
     origem = request.form.get('origem').strip()
     destino = request.form.get('destino').strip()
     data_str = request.form.get('data')
+    data_chegada_str = request.form.get('data_chegada')
     valor_frete = float(request.form.get('valor_frete', 0.0) or 0)
     custo_combustivel = float(request.form.get('custo_combustivel', 0.0) or 0)
     custo_pedagio = float(request.form.get('custo_pedagio', 0.0) or 0)
@@ -244,6 +248,7 @@ def editar_viagem(id):
     observacoes = request.form.get('observacoes').strip()
 
     data_viagem = datetime.strptime(data_str, '%Y-%m-%d').date() if data_str else date.today()
+    data_chegada = datetime.strptime(data_chegada_str, '%Y-%m-%d').date() if data_chegada_str else data_viagem
 
     trip_service.update_trip(
         id=id,
@@ -251,6 +256,7 @@ def editar_viagem(id):
         origem=origem,
         destino=destino,
         data=data_viagem,
+        data_chegada=data_chegada,
         valor_frete=valor_frete,
         custo_combustivel=custo_combustivel,
         custo_pedagio=custo_pedagio,
@@ -470,6 +476,7 @@ def inicializar_dados():
         origem='São Paulo - SP',
         destino='Rio de Janeiro - RJ',
         data=date(2026, 3, 15),
+        data_chegada=date(2026, 3, 16),
         valor_frete=3800.00,
         custo_combustivel=1400.00,
         custo_pedagio=350.00,
@@ -485,6 +492,7 @@ def inicializar_dados():
         origem='Curitiba - PR',
         destino='Porto Alegre - RS',
         data=date(2026, 4, 10),
+        data_chegada=date(2026, 4, 11),
         valor_frete=4500.00,
         custo_combustivel=1700.00,
         custo_pedagio=280.00,
@@ -500,6 +508,7 @@ def inicializar_dados():
         origem='Belo Horizonte - MG',
         destino='Vitória - ES',
         data=date(2026, 5, 2),
+        data_chegada=date(2026, 5, 3),
         valor_frete=5200.00,
         custo_combustivel=2100.00,
         custo_pedagio=420.00,
@@ -515,6 +524,7 @@ def inicializar_dados():
         origem='São Paulo - SP',
         destino='Campinas - SP',
         data=date(2026, 5, 20),
+        data_chegada=date(2026, 5, 20),
         valor_frete=1800.00,
         custo_combustivel=550.00,
         custo_pedagio=120.00,

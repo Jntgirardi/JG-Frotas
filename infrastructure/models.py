@@ -36,6 +36,7 @@ class ViagemModel(db.Model):
     origem = db.Column(db.String(100), nullable=False)
     destino = db.Column(db.String(100), nullable=False)
     data = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    data_chegada = db.Column(db.Date, nullable=False, default=datetime.utcnow)
     valor_frete = db.Column(db.Float, nullable=False, default=0.0)
     custo_combustivel = db.Column(db.Float, nullable=False, default=0.0)
     custo_pedagio = db.Column(db.Float, nullable=False, default=0.0)

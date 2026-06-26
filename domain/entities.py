@@ -19,7 +19,7 @@ class Caminhao:
 
 
 class Viagem:
-    def __init__(self, id=None, caminhao_id=None, origem=None, destino=None, data=None, 
+    def __init__(self, id=None, caminhao_id=None, origem=None, destino=None, data=None, data_chegada=None,
                  valor_frete=0.0, custo_combustivel=0.0, custo_pedagio=0.0, outros_custos=0.0, 
                  comissao_motorista=0.0, prestacao=0.0, impostos=0.0,
                  lucro_liquido=0.0, pago=False, observacoes=None, caminhao=None):
@@ -28,6 +28,7 @@ class Viagem:
         self.origem = origem
         self.destino = destino
         self.data = data or date.today()
+        self.data_chegada = data_chegada or self.data
         self.valor_frete = valor_frete
         self.custo_combustivel = custo_combustivel
         self.custo_pedagio = custo_pedagio
