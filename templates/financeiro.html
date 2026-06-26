@@ -269,7 +269,7 @@
     // Gráfico de Pizza (Composition of Expenses)
     const ctxPie = document.getElementById('despesasPieChart').getContext('2d');
     
-    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDarkMode = false;
     const labelTextColor = isDarkMode ? '#cbd5e1' : '#475569';
 
     new Chart(ctxPie, {

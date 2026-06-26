@@ -490,7 +490,7 @@
     // Renderização do gráfico do Chart.js integrado
     {% if labels_grafico %}
     const ctx = document.getElementById('financeiroChart').getContext('2d');
-    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDarkMode = false;
     const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
     const textColor = isDarkMode ? '#cbd5e1' : '#475569';
 

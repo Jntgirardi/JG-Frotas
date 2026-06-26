@@ -43,22 +43,7 @@
     --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Modo Escuro (Detecta automaticamente ou pode ser acionado) */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg-app: hsl(222, 47%, 7%);
-        --bg-card: hsl(222, 47%, 12%);
-        --text-main: hsl(210, 40%, 98%);
-        --text-muted: hsl(215, 20%, 75%);
-        --border: hsl(222, 40%, 20%);
-        --primary-light: hsl(var(--primary-hue), 50%, 18%);
-        --success-light: hsl(150, 50%, 12%);
-        --danger-light: hsl(350, 50%, 12%);
-        --warning-light: hsl(38, 50%, 12%);
-        --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
-        --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.4);
-    }
-}
+
 
 /* ==========================================================================
    RESET & REGRAS GERAIS DE ACESSIBILIDADE
@@ -508,11 +493,7 @@ textarea:focus-visible {
     background-color: hsl(220, 30%, 98%);
 }
 
-@media (prefers-color-scheme: dark) {
-    .custom-table tr:hover td {
-        background-color: hsl(222, 47%, 14%);
-    }
-}
+
 
 /* Ações em Linha de Tabela */
 .table-actions {
