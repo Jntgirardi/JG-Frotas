@@ -576,6 +576,23 @@ def api_ping():
         return {"status": "error", "message": str(e)}, 500
 
 
+# ----------------- ENDPOINT TEMPORÁRIO DE INICIALIZAÇÃO DE PRODUÇÃO -----------------
+
+@app.route('/api/reset_db')
+def api_reset_db():
+    secret = request.args.get('secret')
+    if secret != 'limpar_banco_jonathas_2026':
+        return {"status": "error", "message": "Acesso negado"}, 403
+
+    try:
+        db.drop_all()
+        db.create_all()
+        auth_service.register('jonathas', '1234')
+        return {"status": "success", "message": "Banco de dados do Supabase reinicializado com sucesso!"}, 200
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500
+
+
 if __name__ == '__main__':
     with app.app_context():
         # Cria as tabelas se ainda não existirem
