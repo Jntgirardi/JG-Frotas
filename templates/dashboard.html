@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-header">
     <div>
-        <h1 class="page-title">Bem-vindo, Jonat!</h1>
+        <h1 class="page-title">Bem-vindo, {{ session.get('username', 'Jonathas')|capitalize }}!</h1>
         <p class="page-subtitle">Aqui está o resumo completo da sua empresa de transporte hoje.</p>
     </div>
     

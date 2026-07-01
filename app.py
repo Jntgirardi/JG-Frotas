@@ -70,7 +70,7 @@ def cadastro_inicial():
         session['user_id'] = user.id
         session['username'] = user.username
         
-        flash('Perfil de administrador configurado com sucesso! Bem-vindo ao RotaFácil.', 'success')
+        flash('Perfil de administrador configurado com sucesso! Bem-vindo ao JG-Frotas.', 'success')
         return redirect(url_for('dashboard'))
 
     return render_template('cadastro_inicial.html')
@@ -458,12 +458,18 @@ def folha_pagamento(id, mes, ano):
 
 @app.route('/inicializar_dados')
 def inicializar_dados():
+    # Bloqueio de Segurança para Produção (PostgreSQL / Supabase)
+    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    if 'postgresql' in db_uri or 'postgres' in db_uri:
+        flash('Erro de Segurança: A inicialização do banco de dados com dados de demonstração é proibida no ambiente de produção (Supabase)!', 'danger')
+        return redirect(url_for('login'))
+
     # Remove e recria as tabelas físicas do banco SQLite
     db.drop_all()
     db.create_all()
 
-    # 1. Cria usuário padrão jc_admin/jc_admin123 criptografado para o primeiro acesso
-    auth_service.register('jc_admin', 'jc_admin123')
+    # 1. Cria usuário padrão jonathas/1234 criptografado para o primeiro acesso
+    auth_service.register('jonathas', '1234')
 
     # 2. Cria 3 caminhões de teste
     c1 = fleet_service.register_truck('BRA2E19', 'Volvo FH 540 Globetrotter', 2021, 'Branco', 'Em Viagem', motorista='Carlos Souza')
@@ -554,8 +560,20 @@ def inicializar_dados():
         oficina='Freios Paranaense'
     )
 
-    flash('Banco de dados reconfigurado! Perfil criado: Usuário: jc_admin | Senha: jc_admin123', 'success')
+    flash('Banco de dados reconfigurado! Perfil criado: Usuário: jonathas | Senha: 1234', 'success')
     return redirect(url_for('login'))
+
+
+# ----------------- ENDPOINT DE ATIVIDADE (ANTI-PAUSA SUPABASE) -----------------
+
+@app.route('/api/ping')
+def api_ping():
+    try:
+        # Executa uma query simples para registrar atividade no banco de dados e evitar suspensão
+        db.session.execute(db.text('SELECT 1'))
+        return {"status": "success", "message": "Database pinged successfully"}, 200
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500
 
 
 if __name__ == '__main__':
